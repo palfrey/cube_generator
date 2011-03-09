@@ -212,6 +212,20 @@ class Face:
 		else:
 			raise Exception, self.direction
 
+	def printFace(self):
+		out = {}
+		for x in range(len(self.grid)):
+			for y in range(len(self.grid[x])):
+				if x not in out:
+					out[x] = ""
+				
+				if self.grid[x][y]:
+					out[x] += "*"
+				else:
+					out[x] += " "
+		for x in sorted(out):
+			print out[x]
+
 def cuboid(space, topleft, bottomright):
 	ret = []
 
@@ -242,8 +256,12 @@ def cube_faces(space, topleft, bottomright):
 	return ret
 
 space = Space([a*cube_side for a in dimensions])
-cubes = cube_faces(space, (0,0,0), cube_size)
+faces = cube_faces(space, (0,0,0), cube_size)
 
 space.generateCubes(d)
+
+for face in faces:
+	print face, face.colour
+	face.printFace()
 
 d.saveas('hello_world.dxf')
