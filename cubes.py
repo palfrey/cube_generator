@@ -1,8 +1,8 @@
 import sdxf
 
-d=sdxf.Drawing()
+d = sdxf.Drawing()
 
-d.layers.append(sdxf.Layer(name="textlayer",color=3))
+#d.layers.append(sdxf.Layer(name="textlayer",color=3))
 
 dimensions = (1,1,1) # cube count in x/y/z
 cube_size = 8 # number of unit lengths per cube size. 1 unit length == material depth
