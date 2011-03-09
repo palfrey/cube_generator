@@ -60,6 +60,7 @@ class Space:
 					current = second
 				else:
 					current = first
+				current.deleteCube(x,y,z) # this should be the "other" face
 
 		for x in range(len(self.grid)):
 			x2 = x+1
@@ -109,6 +110,10 @@ class Space:
 							else:
 								raise Exception, axe # shouldn't happen
 						assert poss != None
+						for owner in self.grid[x][y][z]:
+							if owner == poss:
+								continue
+							owner.deleteCube(x,y,z)
 						self.grid[x][y][z] = [poss]
 
 					for owner in self.grid[x][y][z]:
@@ -135,7 +140,9 @@ class Face:
 			Face.last_colour +=1
 		assert width>=3, width
 		assert height>=3, height
-		self.origin = origin
+		self.width = width
+		self.height = height
+		self.origin = list(origin)
 		self.grid = [[True for x in range(height)] for y in range(width)]
 		self.direction = direction
 
@@ -157,6 +164,53 @@ class Face:
 					space.addBox(self, (origin[0]-a-1, origin[1]-b-1, origin[2]-1))
 				else:
 					raise Exception, self.direction
+
+	def deleteCube(self, x, y, z):
+		print self.origin, self.direction, (x,y,z)
+		if self.direction == Direction.POS_X:
+			assert self.origin[0] == x,x
+			assert y>=self.origin[1] and y<self.origin[1]+self.width,y
+			assert z>=self.origin[2] and z<self.origin[2]+self.height,z
+			#(origin[0], origin[1]+a, origin[2]+b))
+			assert self.grid[y-self.origin[1]][z-self.origin[2]]
+			self.grid[y-self.origin[1]][z-self.origin[2]] = False
+		elif self.direction == Direction.POS_Y:
+			assert x>=self.origin[0] and x<self.origin[0]+self.width,x
+			assert self.origin[1] == y,y
+			assert z>=self.origin[2] and z<self.origin[2]+self.height,z
+			#(origin[0]+a, origin[1], origin[2]+b))
+			assert self.grid[x-self.origin[0]][z-self.origin[2]]
+			self.grid[x-self.origin[0]][z-self.origin[2]] = False
+		elif self.direction == Direction.POS_Z:
+			assert x>=self.origin[0] and x<self.origin[0]+self.width,x
+			assert y>=self.origin[1] and y<self.origin[1]+self.width,y
+			assert self.origin[2] == z,z
+			# (origin[0]+a, origin[1]+b, origin[2]))
+			assert self.grid[x-self.origin[0]][y-self.origin[1]]
+			self.grid[x-self.origin[0]][y-self.origin[1]] = False
+		elif self.direction == Direction.NEG_X:
+			assert self.origin[0]-1 == x,x
+			assert y<self.origin[1] and y>self.origin[1]-self.height-1,y
+			assert z<self.origin[2] and z>self.origin[2]-self.height-1,z
+			#space.addBox(self, (origin[0]-1, origin[1]-a-1, origin[2]-b-1))
+			assert self.grid[y-self.origin[1]][z-self.origin[2]]
+			self.grid[y-self.origin[1]][z-self.origin[2]] = False
+		elif self.direction == Direction.NEG_Y:
+			assert x<self.origin[0] and x>self.origin[0]-self.width-1,x
+			assert self.origin[1]-1 == y,y
+			assert z<self.origin[2] and z>self.origin[2]-self.height-1,z
+			#space.addBox(self, (origin[0]-a-1, origin[1]-1, origin[2]-b-1))
+			assert self.grid[self.origin[0]-x-1][self.origin[2]-z-1]
+			self.grid[self.origin[0]-x-1][self.origin[2]-z-1] = False
+		elif self.direction == Direction.NEG_Z:
+			assert x<self.origin[0] and x>self.origin[0]-self.width-1,x
+			assert y<self.origin[1] and y>self.origin[1]-self.height-1,y
+			assert self.origin[2]-1 == z,z
+			#space.addBox(self, (origin[0]-a-1, origin[1]-b-1, origin[2]-1))
+			assert self.grid[self.origin[0]-x-1][self.origin[1]-y-1]
+			self.grid[self.origin[0]-x-1][self.origin[1]-y-1] = False
+		else:
+			raise Exception, self.direction
 
 def cuboid(space, topleft, bottomright):
 	ret = []
