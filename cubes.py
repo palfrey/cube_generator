@@ -3,14 +3,8 @@ from enum import Enum
 import random
 random.seed()
 
-d = sdxf.Drawing()
-
-#d.layers.append(sdxf.Layer(name="textlayer",color=3))
-
 dimensions = (1,1,1) # cube count in x/y/z
 cube_side = 6 # number of unit lengths per cube side. 1 unit length == material depth
-
-cube_size = (cube_side, cube_side, cube_side)
 
 class Direction(Enum):
 	POS_X = 1
@@ -143,7 +137,7 @@ class Face:
 		self.width = width
 		self.height = height
 		self.origin = list(origin)
-		self.grid = [[True for x in range(height)] for y in range(width)]
+		self.grid = [[True for y in range(height)] for x in range(width)]
 		self.direction = direction
 
 		print "face", origin, width, height, self.colour
@@ -212,19 +206,81 @@ class Face:
 		else:
 			raise Exception, self.direction
 
-	def printFace(self):
-		out = {}
+	def _setChar(self, out, x,y, char):
+		out[y] = out[y][:x] + char + out[y][x+1:]
+
+	def printFace(self, path = []):
+		out = dict([(a, " "*((self.width*2)+1)) for a in range((self.height*2)+1)])
 		for x in range(len(self.grid)):
 			for y in range(len(self.grid[x])):
-				if x not in out:
-					out[x] = ""
-				
 				if self.grid[x][y]:
-					out[x] += "*"
+					self._setChar(out, (x*2)+1, (y*2)+1, "T")
 				else:
-					out[x] += " "
-		for x in sorted(out):
-			print out[x]
+					self._setChar(out, (x*2)+1, (y*2)+1, "F")
+		
+		if path!=[]:
+			for a in range(len(path)-1):
+				(x,y) = path[a]
+				(x2,y2) = path[a+1]
+				if y != y2:
+					assert x == x2,(path[a],path[a+1])
+					assert abs(y2-y) == 1,(path[a],path[a+1])
+					if y2<y:
+						y = y2
+					for b in range(3):
+						self._setChar(out, x*2, (y*2)+b, str(a)[-1])
+				else:
+					assert abs(x2-x) == 1,(x,x2)
+					if x2<x:
+						x = x2
+					for b in range(3):
+						self._setChar(out, (x*2)+b, y*2, str(a)[-1])
+
+		for y in sorted(out):
+			print out[y]
+
+	def makeOutline(self, d, place):
+		self.printFace()
+		x,y = 0,0
+		while not self.grid[x][y]:
+			print "initial no good", x,y
+			x +=1
+		print "start",x,y,self.grid[x][y]
+		pts = []
+		while True:
+			#print x,y
+			if (x,y) in pts:
+				pts.append((x,y))
+				print pts
+				self.printFace(pts)
+				assert pts[0] == (x,y)
+				break
+			pts.append((x,y))
+			try:
+				if y<self.height and x<self.width and self.grid[x][y] and (y==0 or not self.grid[x][y-1]):
+					x +=1
+					print "move right to", x,y
+				elif y<self.height and ((x>0 and x<self.width and not self.grid[x][y] and self.grid[x-1][y]) or (x == self.width and self.grid[x-1][y])):
+					y +=1
+					print "move down to", x,y,
+					if x<self.width-1:
+						print self.grid[x][y-1],self.grid[x-1][y-1]
+					else:
+						print
+				elif x<self.width and ((y!=0 and self.grid[x][y-1] and not self.grid[x-1][y-1]) or (x == 0 and self.grid[x][y-1])):
+					y-=1
+					print "move up to", x,y
+				elif x>0 and ((y<self.height and not self.grid[x-1][y]) or y == self.height):
+					x-=1
+					print "move left to", x,y
+				else:
+					raise Exception
+				if x<0 or y<0:
+					raise Exception,(x,y)
+			except Exception:
+				print pts
+				self.printFace(pts)
+				raise
 
 def cuboid(space, topleft, bottomright):
 	ret = []
@@ -255,13 +311,17 @@ def cube_faces(space, topleft, bottomright):
 
 	return ret
 
-space = Space([a*cube_side for a in dimensions])
-faces = cube_faces(space, (0,0,0), cube_size)
+if __name__ == "__main__":
+	cube_size = (cube_side, cube_side, cube_side)
+	space = Space([a*cube_side for a in dimensions])
+	faces = cube_faces(space, (0,0,0), cube_size)
 
-space.generateCubes(d)
+	blender = sdxf.Drawing()
+	space.generateCubes(blender)
+	blender.saveas('hello_world.dxf')
 
-for face in faces:
-	print face, face.colour
-	face.printFace()
-
-d.saveas('hello_world.dxf')
+	plans = sdxf.Drawing()
+	for face in sorted(faces):
+		print face, face.colour
+		face.makeOutline(plans, None)
+	plans.saveas('plans.dxf')
