@@ -4,7 +4,8 @@ import random
 random.seed()
 
 dimensions = (1,1,1) # cube count in x/y/z
-cube_side = 6 # number of unit lengths per cube side. 1 unit length == material depth
+cube_side = 16 # number of unit lengths per cube side. 1 unit length == material depth
+sheet_size = (33,1000)
 
 class Direction(Enum):
 	POS_X = 1
@@ -254,7 +255,8 @@ class Face:
 				print pts
 				self.printFace(pts)
 				assert pts[0] == (x,y)
-				break
+				d.append(sdxf.LwPolyLine(points=[(a+place[0],b+place[1]) for (a,b) in pts]))
+				return
 			pts.append((x,y))
 			try:
 				if y<self.height and x<self.width and self.grid[x][y] and (y==0 or not self.grid[x][y-1]):
@@ -312,6 +314,8 @@ def cube_faces(space, topleft, bottomright):
 	return ret
 
 if __name__ == "__main__":
+	assert sheet_size[0]>cube_side and sheet_size[1]>cube_side, (sheet_size, cube_side)
+
 	cube_size = (cube_side, cube_side, cube_side)
 	space = Space([a*cube_side for a in dimensions])
 	faces = cube_faces(space, (0,0,0), cube_size)
@@ -321,7 +325,13 @@ if __name__ == "__main__":
 	blender.saveas('hello_world.dxf')
 
 	plans = sdxf.Drawing()
+	x,y = 0,0
 	for face in sorted(faces):
 		print face, face.colour
-		face.makeOutline(plans, None)
+		face.makeOutline(plans, (x,y))
+		x += cube_side+1
+		if x + cube_side > sheet_size[0]:
+			x = 0
+			y += cube_side +1
+			assert y + cube_side < sheet_size[1]
 	plans.saveas('plans.dxf')
