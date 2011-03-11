@@ -150,7 +150,7 @@ class Face:
 		self.grid = [[True for y in range(height)] for x in range(width)]
 		self.direction = direction
 
-		print "face", origin, width, height, self.colour
+		#print "face", origin, width, height, self.colour
 
 		for a in range(width):
 			for b in range(height):
@@ -170,7 +170,7 @@ class Face:
 					raise Exception, self.direction
 
 	def deleteCube(self, x, y, z):
-		print self.origin, self.direction, (x,y,z)
+		#print self.origin, self.direction, (x,y,z)
 		if self.direction == Direction.POS_X:
 			assert self.origin[0] == x,x
 			assert y>=self.origin[1] and y<self.origin[1]+self.width,y
@@ -246,8 +246,8 @@ class Face:
 					for b in range(3):
 						self._setChar(out, (x*2)+b, y*2, str(a)[-1])
 
-		for y in sorted(out):
-			print out[y]
+		#for y in sorted(out):
+		#	print out[y]
 
 	def makeOutline(self, d, place):
 		pts = self.makeFaceOutline()
@@ -257,36 +257,36 @@ class Face:
 		#self.printFace()
 		x,y = 0,0
 		while not self.grid[x][y]:
-			print "initial no good", x,y
+			#print "initial no good", x,y
 			x +=1
-		print "start",x,y,self.grid[x][y]
+		#print "start",x,y,self.grid[x][y]
 		pts = []
 		while True:
 			#print x,y
 			if (x,y) in pts:
 				pts.append((x,y))
-				print pts
-				self.printFace(pts)
+				#print pts
+				#self.printFace(pts)
 				assert pts[0] == (x,y)
 				return pts
 			pts.append((x,y))
 			try:
 				if y<self.height and x<self.width and self.grid[x][y] and (y==0 or not self.grid[x][y-1]):
 					x +=1
-					print "move right to", x,y
+					#print "move right to", x,y
 				elif y<self.height and ((x>0 and x<self.width and not self.grid[x][y] and self.grid[x-1][y]) or (x == self.width and self.grid[x-1][y])):
 					y +=1
-					print "move down to", x,y,
-					if x<self.width-1:
-						print self.grid[x][y-1],self.grid[x-1][y-1]
-					else:
-						print
+					#print "move down to", x,y,
+					#if x<self.width-1:
+					#	print self.grid[x][y-1],self.grid[x-1][y-1]
+					#else:
+					#	print
 				elif x<self.width and ((y!=0 and self.grid[x][y-1] and not self.grid[x-1][y-1]) or (x == 0 and self.grid[x][y-1])):
 					y-=1
-					print "move up to", x,y
+					#print "move up to", x,y
 				elif x>0 and ((y<self.height and not self.grid[x-1][y]) or y == self.height):
 					x-=1
-					print "move left to", x,y
+					#print "move left to", x,y
 				else:
 					raise Exception
 				if x<0 or y<0:
@@ -340,7 +340,7 @@ if __name__ == "__main__":
 	plans = sdxf.Drawing()
 	x,y = 0,0
 	for face in sorted(faces):
-		print face, face.colour
+		#print face, face.colour
 		face.makeOutline(plans, (x,y))
 		x += cube_side+1
 		if x + cube_side > sheet_size[0]:
