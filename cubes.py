@@ -28,8 +28,7 @@ class Space:
 			print coords
 			raise
 
-	def generateCubes(self, d):
-		layers = {}
+	def fixCubes(self):
 
 		pairs = {}
 
@@ -110,6 +109,16 @@ class Space:
 								continue
 							owner.deleteCube(x,y,z)
 						self.grid[x][y][z] = [poss]
+	
+	def generateCubes(self,d):
+		layers = {}
+
+		for x in range(len(self.grid)):
+			x2 = x+1
+			for y in range(len(self.grid[x])):
+				y2 = y+1
+				for z in range(len(self.grid[x][y])):
+					z2 = z+1
 
 					for owner in self.grid[x][y][z]:
 						if owner.colour not in layers:
@@ -241,7 +250,11 @@ class Face:
 			print out[y]
 
 	def makeOutline(self, d, place):
-		self.printFace()
+		pts = self.makeFaceOutline()
+		d.append(sdxf.LwPolyLine(points=[(a+place[0],b+place[1]) for (a,b) in pts]))
+
+	def makeFaceOutline(self):
+		#self.printFace()
 		x,y = 0,0
 		while not self.grid[x][y]:
 			print "initial no good", x,y
@@ -255,8 +268,7 @@ class Face:
 				print pts
 				self.printFace(pts)
 				assert pts[0] == (x,y)
-				d.append(sdxf.LwPolyLine(points=[(a+place[0],b+place[1]) for (a,b) in pts]))
-				return
+				return pts
 			pts.append((x,y))
 			try:
 				if y<self.height and x<self.width and self.grid[x][y] and (y==0 or not self.grid[x][y-1]):
@@ -321,6 +333,7 @@ if __name__ == "__main__":
 	faces = cube_faces(space, (0,0,0), cube_size)
 
 	blender = sdxf.Drawing()
+	space.fixCubes()
 	space.generateCubes(blender)
 	blender.saveas('hello_world.dxf')
 

@@ -7,6 +7,11 @@ d = sdxf.Drawing()
 f = cubes.Face(cubes.Direction.POS_X, 8,8, (0,0,0), space)
 f.makeOutline(d, (0,0))
 
+blender = sdxf.Drawing()
+space.fixCubes()
+space.generateCubes(blender)
+blender.saveas("hello_world.dxf")
+
 f.grid[0][1] = False
 f.makeOutline(d, (8,0))
 
