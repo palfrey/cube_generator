@@ -90,7 +90,9 @@ class Space:
 						possibleOwner = self.grid[x2][y2][z2]
 						if len(possibleOwner) == 0: # nothing there
 							return None
-						assert len(possibleOwner) == 1, (possibleOwner, x2,y2,z2,x,y,z)
+						if len(possibleOwner)!=1: # can't use it
+							return None
+						#assert len(possibleOwner) == 1, (possibleOwner, x2,y2,z2,x,y,z)
 						possibleOwner = possibleOwner[0]
 						if possibleOwner in self.grid[x][y][z]:
 							return possibleOwner
