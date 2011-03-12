@@ -32,7 +32,7 @@ class Space:
 		assert len(size) == 3, size
 		self.grid = [[[[] for z in range(size[2])] for y in range(size[1])] for x in range(size[0])]
 
-	def addBox(self, owner, coords):
+	def addBox(self, coords, owner):
 		assert [a for a in coords if a<0] == [], coords
 		try:
 			self.grid[coords[0]][coords[1]][coords[2]].append(owner)
@@ -164,20 +164,23 @@ class Face:
 
 		#print "face", origin, width, height, self.colour
 
-		for a in range(width):
-			for b in range(height):
+		self.forAllCubes(space.addBox, (self,))
+	
+	def forAllCubes(self, func, args):
+		for a in range(self.width):
+			for b in range(self.height):
 				if self.direction == Direction.POS_X:
-					space.addBox(self, (origin[0], origin[1]+a, origin[2]+b))
+					func((self.origin[0], self.origin[1]+a, self.origin[2]+b), *args)
 				elif self.direction == Direction.POS_Y:
-					space.addBox(self, (origin[0]+a, origin[1], origin[2]+b))
+					func((self.origin[0]+a, self.origin[1], self.origin[2]+b), *args)
 				elif self.direction == Direction.POS_Z:
-					space.addBox(self, (origin[0]+a, origin[1]+b, origin[2]))
+					func((self.origin[0]+a, self.origin[1]+b, self.origin[2]), *args)
 				elif self.direction == Direction.NEG_X:
-					space.addBox(self, (origin[0]-1, origin[1]-a-1, origin[2]-b-1))
+					func((self.origin[0]-1, self.origin[1]-a-1, self.origin[2]-b-1), *args)
 				elif self.direction == Direction.NEG_Y:
-					space.addBox(self, (origin[0]-a-1, origin[1]-1, origin[2]-b-1))
+					func((self.origin[0]-a-1, self.origin[1]-1, self.origin[2]-b-1), *args)
 				elif self.direction == Direction.NEG_Z:
-					space.addBox(self, (origin[0]-a-1, origin[1]-b-1, origin[2]-1))
+					func((self.origin[0]-a-1, self.origin[1]-b-1, self.origin[2]-1), *args)
 				else:
 					raise Exception, self.direction
 
