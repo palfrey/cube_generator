@@ -296,10 +296,6 @@ class Face:
 				self.printFace(pts)
 				raise
 
-def cuboid(space, topleft, bottomright):
-	ret = []
-
-
 def cube_faces(space, topleft, bottomright):
 	if topleft > bottomright:
 		temp = topleft
