@@ -275,8 +275,8 @@ class Face:
 					for b in range(3):
 						self._setChar(out, (x*2)+b, y*2, str(a)[-1])
 
-		#for y in sorted(out):
-		#	print out[y]
+		for y in sorted(out):
+			print out[y]
 
 	def makeOutline(self, d, place):
 		pts = self.makeFaceOutline()
