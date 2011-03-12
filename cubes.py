@@ -3,9 +3,21 @@ from enum import Enum
 import random
 random.seed()
 
-dimensions = (1,1,1) # cube count in x/y/z
 cube_side = 16 # number of unit lengths per cube side. 1 unit length == material depth
 sheet_size = (33,1000)
+cube_grid = (((True,),),)
+
+dimensions = [None,None,len(cube_grid)]
+for plane in cube_grid:
+	if dimensions[1] == None:
+		dimensions[1] = len(plane)
+	else:
+		assert dimensions[1] == len(plane)
+	for row in plane:
+		if dimensions[0] == None:
+			dimensions[0] = len(row)
+		else:
+			assert dimensions[0] == len(row)
 
 class Direction(Enum):
 	POS_X = 1
