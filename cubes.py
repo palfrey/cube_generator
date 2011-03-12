@@ -161,7 +161,7 @@ class Face:
 
 	def __init__(self, direction, width, height, origin, space):
 		self.colour = Face.colours[Face.last_colour+1]
-		if Face.last_colour +2 > len(Face.colours):
+		if Face.last_colour +2 >= len(Face.colours):
 			Face.last_colour = -1
 		else:
 			Face.last_colour +=1
