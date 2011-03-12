@@ -40,6 +40,15 @@ class Space:
 			print coords
 			raise
 
+	def removeBox(self, coords, owner):
+		assert [a for a in coords if a<0] == [], coords
+		try:
+			assert owner in self.grid[coords[0]][coords[1]][coords[2]]
+			self.grid[coords[0]][coords[1]][coords[2]].remove(owner)
+		except IndexError:
+			print coords
+			raise
+
 	def fixCubes(self):
 
 		pairs = {}
@@ -165,6 +174,9 @@ class Face:
 		#print "face", origin, width, height, self.colour
 
 		self.forAllCubes(space.addBox, (self,))
+
+	def removeCubes(self):
+		self.forAllCubes(space.removeBox, (self,))
 	
 	def forAllCubes(self, func, args):
 		for a in range(self.width):
@@ -311,14 +323,9 @@ class Face:
 				self.printFace(pts)
 				raise
 
-def cube_faces(space, topleft, bottomright):
-	if topleft > bottomright:
-		temp = topleft
-		topleft = bottomright
-		bottomright = temp
-
+def cube_faces(space, topleft, cube_side):
 	(x,y,z) = topleft
-	(x2,y2,z2) = bottomright
+	(x2,y2,z2) = bottomright = (x+cube_side, y+cube_side, z+cube_side)
 
 	assert x<x2,(x,x2)
 	assert y<y2,(y,y2)
@@ -336,12 +343,88 @@ def cube_faces(space, topleft, bottomright):
 
 	return ret
 
+class CubeType(Enum):
+	Filled = 1
+	Empty = 2 # can be seen by an edge cube
+	HiddenEmpty = 3 # can't been seen by edge
+
+def find_nonhidden_cubes(grid, x,y,z):
+	ret = []
+	if x>0 and grid[z][y][x-1] == CubeType.HiddenEmpty:
+		ret.append((x-1,y,z))
+	if x<len(grid[z][y])-1 and grid[z][y][x+1] == CubeType.HiddenEmpty:
+		ret.append((x+1,y,z))
+	if y>0 and grid[z][y-1] == CubeType.HiddenEmpty:
+		ret.append((x,y-1,z))
+	if y<len(grid[z])-1 and grid[z][y+1][x] == CubeType.HiddenEmpty:
+		ret.append((x,y+1,z))
+	if z>0 and grid[z-1][y][x] == CubeType.HiddenEmpty:
+		ret.append((x,y,z-1))
+	if z<len(grid)-1 and grid[z+1][y][x] == CubeType.HiddenEmpty:
+		ret.append((x,y,z+1))
+	return ret
+
+def find_empty_cubes(cube_grid):
+	tocheck = []
+
+	ret = []
+	for z in range(len(cube_grid)):
+		plane = []
+		for y in range(len(cube_grid[z])):
+			row = []
+			for x in range(len(cube_grid[z][y])):
+				if cube_grid[z][y][x]:
+					row.append(CubeType.Filled)
+				elif x == 0 or x == len(cube_grid[z][y])-1 or y == 0 or y == len(cube_grid[z])-1 or z == 0 or z == len(cube_grid)-1:
+					row.append(CubeType.Empty)
+					tocheck.append((x,y,z))
+				else:
+					row.append(CubeType.HiddenEmpty)
+			plane.append(row)
+		ret.append(plane)
+
+	while len(tocheck)>0:
+		(x,y,z) = tocheck[0]
+		tocheck = tocheck[1:]
+		newempty = find_nonhidden_cubes(ret, x,y,z)
+		tocheck.extend(newempty)
+		for (x,y,z) in newempty:
+			ret[z][y][x] = CubeType.Empty
+
+	return ret
+
 if __name__ == "__main__":
 	assert sheet_size[0]>cube_side and sheet_size[1]>cube_side, (sheet_size, cube_side)
 
-	cube_size = (cube_side, cube_side, cube_side)
 	space = Space([a*cube_side for a in dimensions])
-	faces = cube_faces(space, (0,0,0), cube_size)
+	faces = []
+
+	grid = find_empty_cubes(cube_grid)
+
+	print grid
+
+	for z in range(len(cube_grid)):
+		for y in range(len(cube_grid[z])):
+			for x in range(len(cube_grid[z][y])):
+				if cube_grid[z][y][x]:
+					newfaces = cube_faces(space, (x*(cube_side-1),y*(cube_side-1),z*(cube_side-1)), cube_side)
+					for face in newfaces:
+						print face, face.direction
+						if face.direction == Direction.NEG_X and (x == len(cube_grid[z][y])-1 or grid[z][y][x+1] == CubeType.Empty):
+							faces.append(face)
+						elif face.direction == Direction.NEG_Y and (y == len(cube_grid[z])-1 or grid[z][y+1][x] == CubeType.Empty):
+							faces.append(face)
+						elif face.direction == Direction.NEG_Z and (z == len(cube_grid)-1 or grid[z+1][y][x] == CubeType.Empty):
+							faces.append(face)
+						elif face.direction == Direction.POS_X and (x == 0 or grid[z][y][x-1] == CubeType.Empty):
+							faces.append(face)
+						elif face.direction == Direction.POS_Y and (y == 0 or grid[z][y-1][x] == CubeType.Empty):
+							faces.append(face)
+						elif face.direction == Direction.POS_Z and (z == 0 or grid[z-1][y][x] == CubeType.Empty):
+							faces.append(face)
+						else:
+							print "skipping", face, face.direction
+							face.removeCubes()
 
 	blender = sdxf.Drawing()
 	space.fixCubes()
