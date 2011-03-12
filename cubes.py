@@ -288,6 +288,8 @@ class Face:
 		while not self.grid[x][y]:
 			#print "initial no good", x,y
 			x +=1
+			if x == self.width:
+				raise Exception, "Sanity failure, doesn't look like a valid piece"
 		#print "start",x,y,self.grid[x][y]
 		pts = []
 		while True:
