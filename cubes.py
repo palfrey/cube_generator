@@ -72,8 +72,10 @@ class Space:
 			for (x,y,z) in sorted(pairs[key]):
 				self.grid[x][y][z] = [current]
 				if current == first:
+					current.markNeighbour(second,x,y,z)
 					current = second
 				else:
+					current.markNeighbour(first,x,y,z)
 					current = first
 				current.deleteCube(x,y,z) # this should be the "other" face
 
@@ -175,6 +177,7 @@ class Face:
 		self.origin = list(origin)
 		self.grid = [[True for y in range(height)] for x in range(width)]
 		self.direction = direction
+		self.neighbour = [None for x in range(4)]
 
 		#print "face", origin, width, height, self.colour
 
@@ -244,6 +247,28 @@ class Face:
 	def deleteCube(self, x, y, z):
 		(x2,y2) = self._translateLocation(x,y,z)
 		self.grid[x2][y2] = False
+
+	def markNeighbour(self, other, x, y, z):
+		(x2,y2) = self._translateLocation(x,y,z)
+
+		if x2 == 0:
+			assert y2>0 and y2<self.height-1, (x2,y2)
+			assert self.neighbour[0] in (None, other)
+			self.neighbour[0] = other
+		elif y2 == 0:
+			assert x2>0 and x2<self.width-1, (x2,y2)
+			assert self.neighbour[1] in (None, other)
+			self.neighbour[1] = other
+		elif x2 == self.width-1:
+			assert y2>0 and y2<self.height-1, (x2,y2)
+			assert self.neighbour[2] in (None, other)
+			self.neighbour[2] = other
+		elif y2 == self.height-1:
+			assert x2>0 and x2<self.width-1, (x2,y2)
+			assert self.neighbour[3] in (None, other)
+			self.neighbour[3] = other
+		else:
+			raise Exception, (x2,y2, x,y,z, self.direction)
 
 	def _setChar(self, out, x,y, char):
 		out[y] = out[y][:x] + char + out[y][x+1:]
