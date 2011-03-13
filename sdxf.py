@@ -301,7 +301,7 @@ class Text(_Entity):
         if self.rotation:result+='\n50\n%s'%self.rotation
         if self.xscale:result+='\n41\n%s'%self.xscale
         if self.obliqueAngle:result+='\n51\n%s'%self.obliqueAngle
-        if self.style:result+='\n7\n%s'%self.style
+        if self.style:result+='\n7\n%s'%self.style.name.upper()
         if self.flag:result+='\n71\n%s'%self.flag
         if self.justifyhor:result+='\n72\n%s'%self.justifyhor
         if self.alignment:result+='\n%s'%_point(self.alignment,1)
