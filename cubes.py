@@ -197,53 +197,50 @@ class Face:
 					func((self.origin[0]-a-1, self.origin[1]-b-1, self.origin[2]-1), *args)
 				else:
 					raise Exception, self.direction
-
-	def deleteCube(self, x, y, z):
-		#print self.origin, self.direction, (x,y,z)
+	
+	def _translateLocation(self, x, y, z):
 		if self.direction == Direction.POS_X:
 			assert self.origin[0] == x,x
 			assert y>=self.origin[1] and y<self.origin[1]+self.width,y
 			assert z>=self.origin[2] and z<self.origin[2]+self.height,z
-			#(origin[0], origin[1]+a, origin[2]+b))
 			assert self.grid[y-self.origin[1]][z-self.origin[2]]
-			self.grid[y-self.origin[1]][z-self.origin[2]] = False
+			return (y-self.origin[1],z-self.origin[2])
 		elif self.direction == Direction.POS_Y:
 			assert x>=self.origin[0] and x<self.origin[0]+self.width,x
 			assert self.origin[1] == y,y
 			assert z>=self.origin[2] and z<self.origin[2]+self.height,z
-			#(origin[0]+a, origin[1], origin[2]+b))
 			assert self.grid[x-self.origin[0]][z-self.origin[2]]
-			self.grid[x-self.origin[0]][z-self.origin[2]] = False
+			return (x-self.origin[0],z-self.origin[2])
 		elif self.direction == Direction.POS_Z:
 			assert x>=self.origin[0] and x<self.origin[0]+self.width,x
 			assert y>=self.origin[1] and y<self.origin[1]+self.width,y
 			assert self.origin[2] == z,z
-			# (origin[0]+a, origin[1]+b, origin[2]))
 			assert self.grid[x-self.origin[0]][y-self.origin[1]]
-			self.grid[x-self.origin[0]][y-self.origin[1]] = False
+			return (x-self.origin[0],y-self.origin[1])
 		elif self.direction == Direction.NEG_X:
 			assert self.origin[0]-1 == x,x
 			assert y<self.origin[1] and y>self.origin[1]-self.height-1,y
 			assert z<self.origin[2] and z>self.origin[2]-self.height-1,z
-			#space.addBox(self, (origin[0]-1, origin[1]-a-1, origin[2]-b-1))
-			assert self.grid[y-self.origin[1]][z-self.origin[2]]
-			self.grid[y-self.origin[1]][z-self.origin[2]] = False
+			assert self.grid[self.origin[1]-y-1][self.origin[2]-z-1]
+			return (self.origin[1]-y-1,self.origin[2]-z-1)
 		elif self.direction == Direction.NEG_Y:
 			assert x<self.origin[0] and x>self.origin[0]-self.width-1,x
 			assert self.origin[1]-1 == y,y
 			assert z<self.origin[2] and z>self.origin[2]-self.height-1,z
-			#space.addBox(self, (origin[0]-a-1, origin[1]-1, origin[2]-b-1))
 			assert self.grid[self.origin[0]-x-1][self.origin[2]-z-1]
-			self.grid[self.origin[0]-x-1][self.origin[2]-z-1] = False
+			return (self.origin[0]-x-1,self.origin[2]-z-1)
 		elif self.direction == Direction.NEG_Z:
 			assert x<self.origin[0] and x>self.origin[0]-self.width-1,x
 			assert y<self.origin[1] and y>self.origin[1]-self.height-1,y
 			assert self.origin[2]-1 == z,z
-			#space.addBox(self, (origin[0]-a-1, origin[1]-b-1, origin[2]-1))
 			assert self.grid[self.origin[0]-x-1][self.origin[1]-y-1]
-			self.grid[self.origin[0]-x-1][self.origin[1]-y-1] = False
+			return (self.origin[0]-x-1,self.origin[1]-y-1)
 		else:
 			raise Exception, self.direction
+
+	def deleteCube(self, x, y, z):
+		(x2,y2) = self._translateLocation(x,y,z)
+		self.grid[x2][y2] = False
 
 	def _setChar(self, out, x,y, char):
 		out[y] = out[y][:x] + char + out[y][x+1:]
