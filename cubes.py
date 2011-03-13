@@ -158,6 +158,7 @@ class Space:
 class Face:
 	colours = tuple(range(1,8))
 	last_colour = -1
+	last_index = -1
 
 	def __init__(self, direction, width, height, origin, space):
 		self.colour = Face.colours[Face.last_colour+1]
@@ -165,6 +166,8 @@ class Face:
 			Face.last_colour = -1
 		else:
 			Face.last_colour +=1
+		self.index = Face.last_index +1
+		Face.last_index +=1
 		assert width>=3, width
 		assert height>=3, height
 		self.width = width
