@@ -2,6 +2,7 @@ import sdxf
 from enum import Enum
 import random
 random.seed()
+import operator
 
 cube_side = 16 # number of unit lengths per cube side. 1 unit length == material depth
 sheet_size = (33,1000)
@@ -500,7 +501,7 @@ if __name__ == "__main__":
 
 	plans = sdxf.Drawing()
 	x,y = 0,0
-	for face in sorted(faces):
+	for face in sorted(faces, key=operator.attrgetter("index")):
 		#print face, face.colour
 		face.makeOutline(plans, (x,y))
 		x += cube_side+1
