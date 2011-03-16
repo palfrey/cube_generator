@@ -64,7 +64,7 @@ class Space:
 							pairs[key] = []
 						pairs[key].append((x,y,z))
 
-		for key in pairs:
+		for key in sorted(pairs):
 			(first, second) = key
 			current = random.choice(key) # pick random starting piece
 
