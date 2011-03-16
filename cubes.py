@@ -303,9 +303,47 @@ class Face:
 		for y in sorted(out):
 			print out[y]
 
+	def drawNumber(self, char, x, y, width, height):
+		char = int(char)
+		if char == 1:
+			return [sdxf.Line(points=[(x+width/2,y),(x+width/2,y+height)])]
+		ret = []
+		if char in [0,2,3,5,6,7,8,9]: ret.append(sdxf.Line(points=[(x,y),(x+width,y)])) # top bar
+		if char in [0,1,4,5,7,8,9]: ret.append(sdxf.Line(points=[(x+width,y),(x+width,y+height/2)])) # top-right
+		if char in [0,1,2,6,7,8,9]: ret.append(sdxf.Line(points=[(x+width,y+height/2),(x+width,y+height)])) # bottom-right
+		if char in [0,2,3,5,6,8,9]: ret.append(sdxf.Line(points=[(x+width,y+height),(x,y+height)])) # bottom bar
+		if char in [0,2,3,4,6,8,9]: ret.append(sdxf.Line(points=[(x,y),(x,y+height/2)])) # top-left
+		if char in [0,3,4,5,6,8]: ret.append(sdxf.Line(points=[(x,y+height/2),(x,y+height)])) # bottom-left
+		if char in [2,3,4,5,6,8,9]: ret.append(sdxf.Line(points=[(x,y+height/2),(x+width,y+height/2)])) # middle bar
+		return ret
+
 	def makeOutline(self, d, place):
+		def centredText(text,x,y,width,height):
+			itemWidth = (width-((len(text)+1)*spacing))/len(text)
+			ret = []
+			for i in range(len(text)):
+				ret.extend(self.drawNumber(text[i], x+(i*(itemWidth+spacing))+spacing,y+spacing,itemWidth,height-(spacing*2)))
+			return ret
+
 		pts = self.makeFaceOutline()
 		d.append(sdxf.LwPolyLine(points=[(a+place[0],b+place[1]) for (a,b) in pts]))
+
+		# text spacing is 1/4 for the first item, 2/4 for the centre and 1/4 for the last
+		horizspace = (self.width-2.0)/3 # unit (i.e 1/4) for horizontal spacing. -2 to cope with notches
+		vertspace = (self.height-2.0)/3
+		spacing = (self.width-2.0)/24
+
+		print "width",self.width,horizspace,vertspace
+
+		d.extend(centredText("%d"%self.index, place[0]+1+horizspace+spacing, place[1]+1+vertspace, horizspace-spacing, vertspace))
+
+		assert [x for x in self.neighbour if x==None] == [],self.neighbour
+		print self.index,[x.index for x in self.neighbour],self.colour
+
+		d.extend(centredText("%d"%self.neighbour[2].index, place[0]+1, place[1]+1+vertspace, horizspace, vertspace))
+		d.extend(centredText("%d"%self.neighbour[3].index, place[0]+1+horizspace, place[1]+1, horizspace, vertspace))
+		d.extend(centredText("%d"%self.neighbour[0].index, place[0]+1+(horizspace*2), place[1]+1+vertspace, horizspace, vertspace))
+		d.extend(centredText("%d"%self.neighbour[1].index, place[0]+1+horizspace, place[1]+1+(vertspace*2), horizspace, vertspace))
 
 	def makeFaceOutline(self):
 		#self.printFace()
