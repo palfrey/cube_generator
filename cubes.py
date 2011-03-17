@@ -8,18 +8,6 @@ cube_side = 16 # number of unit lengths per cube side. 1 unit length == material
 sheet_size = (33,1000)
 cube_grid = (((True,),),)
 
-dimensions = [None,None,len(cube_grid)]
-for plane in cube_grid:
-	if dimensions[1] == None:
-		dimensions[1] = len(plane)
-	else:
-		assert dimensions[1] == len(plane)
-	for row in plane:
-		if dimensions[0] == None:
-			dimensions[0] = len(row)
-		else:
-			assert dimensions[0] == len(row)
-
 class Direction(Enum):
 	POS_X = 1
 	POS_Y = 2
@@ -470,6 +458,18 @@ def find_empty_cubes(cube_grid):
 
 if __name__ == "__main__":
 	assert sheet_size[0]>cube_side and sheet_size[1]>cube_side, (sheet_size, cube_side)
+
+	dimensions = [None,None,len(cube_grid)]
+	for plane in cube_grid:
+		if dimensions[1] == None:
+			dimensions[1] = len(plane)
+		else:
+			assert dimensions[1] == len(plane)
+		for row in plane:
+			if dimensions[0] == None:
+				dimensions[0] = len(row)
+			else:
+				assert dimensions[0] == len(row)
 
 	space = Space([a*cube_side for a in dimensions])
 	faces = []
