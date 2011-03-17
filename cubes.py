@@ -494,7 +494,7 @@ if __name__ == "__main__":
 				if cube_grid[z][y][x]:
 					newfaces = cube_faces(space, (x*(cube_side-1),y*(cube_side-1),z*(cube_side-1)), cube_side)
 					for face in newfaces:
-						print face, face.direction
+						print face, face.index, face.direction
 						if face.direction == Direction.NEG_X and (x == len(cube_grid[z][y])-1 or grid[z][y][x+1] == CubeType.Empty):
 							faces.append(face)
 						elif face.direction == Direction.NEG_Y and (y == len(cube_grid[z])-1 or grid[z][y+1][x] == CubeType.Empty):
