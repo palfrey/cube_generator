@@ -348,10 +348,10 @@ class Face:
 		assert [x for x in self.neighbour if x==None] == [],self.neighbour
 		print self.index,[x.index for x in self.neighbour],self.colour
 
-		d.extend(centredText("%d"%self.neighbour[2].index, place[0]+1, place[1]+1+vertspace, horizspace, vertspace))
-		d.extend(centredText("%d"%self.neighbour[3].index, place[0]+1+horizspace, place[1]+1, horizspace, vertspace))
-		d.extend(centredText("%d"%self.neighbour[0].index, place[0]+1+(horizspace*2), place[1]+1+vertspace, horizspace, vertspace))
-		d.extend(centredText("%d"%self.neighbour[1].index, place[0]+1+horizspace, place[1]+1+(vertspace*2), horizspace, vertspace))
+		d.extend(centredText("%d"%self.neighbour[0].index, place[0]+1, place[1]+1+vertspace, horizspace, vertspace))
+		d.extend(centredText("%d"%self.neighbour[1].index, place[0]+1+horizspace, place[1]+1, horizspace, vertspace))
+		d.extend(centredText("%d"%self.neighbour[2].index, place[0]+1+(horizspace*2), place[1]+1+vertspace, horizspace, vertspace))
+		d.extend(centredText("%d"%self.neighbour[3].index, place[0]+1+horizspace, place[1]+1+(vertspace*2), horizspace, vertspace))
 
 	def makeFaceOutline(self):
 		#self.printFace()
