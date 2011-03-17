@@ -139,12 +139,12 @@ class Space:
 
 					owner = self.grid[x][y][z][0]
 
-					if owner.colour not in layers:
-						layers[owner.colour] = ("layer-%d"%owner.colour).upper()
-						d.layers.append(sdxf.Layer(name=layers[owner.colour], color=owner.colour))
+					if owner.colour.value() not in layers:
+						layers[owner.colour.value()] = ("layer-%d"%owner.colour.value()).upper()
+						d.layers.append(sdxf.Layer(name=layers[owner.colour.value()], color=owner.colour.value()))
 
 					def doSide(points):
-						d.append(sdxf.Face(points=points, layer=layers[owner.colour]))
+						d.append(sdxf.Face(points=points, layer=layers[owner.colour.value()]))
 
 					doSide([(x,y,z),(x2,y,z),(x2,y2,z),(x,y2,z)])
 					doSide([(x,y,z),(x,y2,z),(x,y2,z2),(x,y,z2)])
@@ -153,8 +153,18 @@ class Space:
 					doSide([(x2,y2,z2),(x,y2,z2),(x,y,z2),(x2,y,z2)])
 					doSide([(x2,y2,z2),(x2,y,z2),(x2,y,z),(x2,y2,z)])
 					doSide([(x2,y2,z2),(x,y2,z2),(x,y2,z),(x2,y2,z)])
+
+class DXFColours(Enum):
+	Red = 1
+	Yellow = 2
+	Green = 3
+	Cyan = 4
+	Blue = 5
+	Magenta = 6 
+	White = 7
+
 class Face:
-	colours = tuple(range(1,8))
+	colours = list(iter(DXFColours))
 	last_colour = -1
 	last_index = -1
 
