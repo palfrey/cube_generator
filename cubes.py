@@ -1,12 +1,8 @@
 import sdxf
 from enum import Enum
 import random
-random.seed()
 import operator
-
-cube_side = 16 # number of unit lengths per cube side. 1 unit length == material depth
-sheet_size = (33,1000)
-cube_grid = (((True,),),)
+from optparse import OptionParser, OptionValueError
 
 class Direction(Enum):
 	POS_X = 1
@@ -76,7 +72,7 @@ class Space:
 					z2 = z+1
 
 					def pickOwner(x2,y2,z2):
-						if x2 <0 or y2<0 or z2<0 or x2>=dimensions[0]*cube_side or y2>=dimensions[1]*cube_side or z2>=dimensions[2]*cube_side:
+						if x2 <0 or y2<0 or z2<0 or x2>=dimensions[0]*opts.cube_side or y2>=dimensions[1]*opts.cube_side or z2>=dimensions[2]*opts.cube_side:
 							return None
 						possibleOwner = self.grid[x2][y2][z2]
 						if len(possibleOwner) == 0: # nothing there
@@ -176,8 +172,6 @@ class Face:
 			Face.last_colour +=1
 		self.index = Face.last_index +1
 		Face.last_index +=1
-		assert width>=3, width
-		assert height>=3, height
 		self.width = width
 		self.height = height
 		self.origin = list(origin)
@@ -467,7 +461,59 @@ def find_empty_cubes(cube_grid):
 	return ret
 
 if __name__ == "__main__":
-	assert sheet_size[0]>cube_side and sheet_size[1]>cube_side, (sheet_size, cube_side)
+
+	parser = OptionParser()
+	parser.add_option("-c","--cube-side",default=6,type="int",dest="cube_side",help="Number of unit lengths per cube side")
+
+	def size_callback(option, opt_str, value, parser):
+		items = value.split(",")
+		if len(items)!=2:
+			raise OptionValueError, "%s is an invalid sheet size"%value
+		
+		try:
+			value = [int(x) for x in items]
+		except ValueError:
+			raise OptionValueError, "%s is an invalid sheet size"%value
+
+		setattr(parser.values, option.dest, value)
+
+	parser.add_option("-s","--sheet-size", default=(33,1000),action="callback", callback=size_callback, nargs=1, dest="sheet_size",type="string")
+	parser.add_option("-r","--random-seed",default=None, dest="seed")
+
+	(opts,args) = parser.parse_args()
+
+	if opts.cube_side < 4:
+		parser.error("Cube sides must be at least 4")
+
+	if len(args)!=1:
+		parser.error("Need a specification file")
+
+	try:
+		data = file(args[0])
+	except IOError:
+		parser.error("Can't open '%s'"%args[0])
+	cube_grid = []
+	plane = []
+	for line in data.readlines():
+		line = line.strip()
+		if len(line)==0:
+			cube_grid.append(plane)
+			plane = []
+		else:
+			if [x for x in line if x not in ('*', '-')]!=[]:
+				parser.error("'%s' is an invalid row!"%line)
+			row = [x == '*' for x in line]
+			plane.append(row)
+
+	if plane!=[]:
+		cube_grid.append(plane)
+
+	random.seed(opts.seed)
+
+	if opts.sheet_size[0]<opts.cube_side:
+		parser.error("Sheet is less wide than the cube size!")
+	if opts.sheet_size[1]<opts.cube_side:
+		parser.error("Sheet is less long than the cube size!")
 
 	dimensions = [None,None,len(cube_grid)]
 	for plane in cube_grid:
@@ -481,7 +527,7 @@ if __name__ == "__main__":
 			else:
 				assert dimensions[0] == len(row)
 
-	space = Space([a*cube_side for a in dimensions])
+	space = Space([a*opts.cube_side for a in dimensions])
 	faces = []
 
 	grid = find_empty_cubes(cube_grid)
@@ -492,7 +538,7 @@ if __name__ == "__main__":
 		for y in range(len(cube_grid[z])):
 			for x in range(len(cube_grid[z][y])):
 				if cube_grid[z][y][x]:
-					newfaces = cube_faces(space, (x*(cube_side-1),y*(cube_side-1),z*(cube_side-1)), cube_side)
+					newfaces = cube_faces(space, (x*(opts.cube_side-1),y*(opts.cube_side-1),z*(opts.cube_side-1)), opts.cube_side)
 					for face in newfaces:
 						print face, face.index, face.direction
 						if face.direction == Direction.NEG_X and (x == len(cube_grid[z][y])-1 or grid[z][y][x+1] == CubeType.Empty):
@@ -514,16 +560,16 @@ if __name__ == "__main__":
 	blender = sdxf.Drawing()
 	space.fixCubes()
 	space.generateCubes(blender)
-	blender.saveas('hello_world.dxf')
+	blender.saveas(args[0]+'-3d.dxf')
 
 	plans = sdxf.Drawing()
 	x,y = 0,0
 	for face in sorted(faces, key=operator.attrgetter("index")):
 		#print face, face.colour
 		face.makeOutline(plans, (x,y))
-		x += cube_side+1
-		if x + cube_side > sheet_size[0]:
+		x += opts.cube_side+1
+		if x + opts.cube_side > opts.sheet_size[0]:
 			x = 0
-			y += cube_side +1
-			assert y + cube_side < sheet_size[1]
-	plans.saveas('plans.dxf')
+			y += opts.cube_side +1
+			assert y + opts.cube_side < opts.sheet_size[1]
+	plans.saveas(args[0]+'-plans.dxf')
