@@ -146,18 +146,25 @@ class Space:
 				for z in range(len(self.grid[x][y])):
 					z2 = z+1
 
-					for owner in self.grid[x][y][z]:
-						if owner.colour not in layers:
-							layers[owner.colour] = ("layer-%d"%owner.colour).upper()
-							d.layers.append(sdxf.Layer(name=layers[owner.colour], color=owner.colour))
+					if len(self.grid[x][y][z]) == 0:
+						continue
 
-						d.append(sdxf.Face(points=[(x,y,z),(x2,y,z),(x2,y2,z),(x,y2,z)], layer=layers[owner.colour]))
-						d.append(sdxf.Face(points=[(x,y,z),(x,y2,z),(x,y2,z2),(x,y,z2)], layer=layers[owner.colour]))
-						d.append(sdxf.Face(points=[(x,y,z),(x2,y,z),(x2,y,z2),(x,y,z2)], layer=layers[owner.colour]))
-						 
-						d.append(sdxf.Face(points=[(x2,y2,z2),(x,y2,z2),(x,y,z2),(x2,y,z2)], layer=layers[owner.colour]))
-						d.append(sdxf.Face(points=[(x2,y2,z2),(x2,y,z2),(x2,y,z),(x2,y2,z)], layer=layers[owner.colour]))
-						d.append(sdxf.Face(points=[(x2,y2,z2),(x,y2,z2),(x,y2,z),(x2,y2,z)], layer=layers[owner.colour]))
+					owner = self.grid[x][y][z][0]
+
+					if owner.colour not in layers:
+						layers[owner.colour] = ("layer-%d"%owner.colour).upper()
+						d.layers.append(sdxf.Layer(name=layers[owner.colour], color=owner.colour))
+
+					def doSide(points):
+						d.append(sdxf.Face(points=points, layer=layers[owner.colour]))
+
+					doSide([(x,y,z),(x2,y,z),(x2,y2,z),(x,y2,z)])
+					doSide([(x,y,z),(x,y2,z),(x,y2,z2),(x,y,z2)])
+					doSide([(x,y,z),(x2,y,z),(x2,y,z2),(x,y,z2)])
+					 
+					doSide([(x2,y2,z2),(x,y2,z2),(x,y,z2),(x2,y,z2)])
+					doSide([(x2,y2,z2),(x2,y,z2),(x2,y,z),(x2,y2,z)])
+					doSide([(x2,y2,z2),(x,y2,z2),(x,y2,z),(x2,y2,z)])
 class Face:
 	colours = tuple(range(1,8))
 	last_colour = -1
