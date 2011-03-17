@@ -571,5 +571,5 @@ if __name__ == "__main__":
 		if x + opts.cube_side > opts.sheet_size[0]:
 			x = 0
 			y += opts.cube_side +1
-			assert y + opts.cube_side < opts.sheet_size[1]
+			assert y + opts.cube_side < opts.sheet_size[1], "Design can't fit on one sheet"
 	plans.saveas(args[0]+'-plans.dxf')
