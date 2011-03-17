@@ -477,7 +477,7 @@ if __name__ == "__main__":
 
 		setattr(parser.values, option.dest, value)
 
-	parser.add_option("-s","--sheet-size", default=(33,1000),action="callback", callback=size_callback, nargs=1, dest="sheet_size",type="string")
+	parser.add_option("-s","--sheet-size", default=(100,200),action="callback", callback=size_callback, nargs=1, dest="sheet_size",type="string")
 	parser.add_option("-r","--random-seed",default=None, dest="seed")
 
 	(opts,args) = parser.parse_args()
