@@ -562,6 +562,10 @@ if __name__ == "__main__":
 	space.generateCubes(blender)
 	blender.saveas(args[0]+'-3d.dxf')
 
+	# reindex all of the faces as there's a few missing after the hidden-face removal
+	for newindex,face in enumerate(sorted(faces, key=operator.attrgetter("index"))):
+		face.index = newindex
+
 	plans = sdxf.Drawing()
 	x,y = 0,0
 	for face in sorted(faces, key=operator.attrgetter("index")):
