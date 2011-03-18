@@ -303,26 +303,33 @@ class Face:
 		for y in sorted(out):
 			print out[y]
 
-	def drawNumber(self, char, x, y, width, height):
+	def drawNumber(self, char, x, y, width, height, layer):
+
 		char = int(char)
 		if char == 1:
-			return [sdxf.Line(points=[(x+width/2,y),(x+width/2,y+height)])]
+			return [sdxf.Line(points=[(x+width/2,y),(x+width/2,y+height)], layer=layer)]
 		ret = []
-		if char in [0,2,3,5,6,7,8,9]: ret.append(sdxf.Line(points=[(x,y),(x+width,y)])) # top bar
-		if char in [0,1,4,5,7,8,9]: ret.append(sdxf.Line(points=[(x+width,y),(x+width,y+height/2)])) # top-right
-		if char in [0,1,2,6,7,8,9]: ret.append(sdxf.Line(points=[(x+width,y+height/2),(x+width,y+height)])) # bottom-right
-		if char in [0,2,3,5,6,8,9]: ret.append(sdxf.Line(points=[(x+width,y+height),(x,y+height)])) # bottom bar
-		if char in [0,2,3,4,6,8,9]: ret.append(sdxf.Line(points=[(x,y),(x,y+height/2)])) # top-left
-		if char in [0,3,4,5,6,8]: ret.append(sdxf.Line(points=[(x,y+height/2),(x,y+height)])) # bottom-left
-		if char in [2,3,4,5,6,8,9]: ret.append(sdxf.Line(points=[(x,y+height/2),(x+width,y+height/2)])) # middle bar
+		if char in [0,2,3,5,6,7,8,9]: ret.append(sdxf.Line(points=[(x,y),(x+width,y)], layer=layer)) # top bar
+		if char in [0,1,4,5,7,8,9]: ret.append(sdxf.Line(points=[(x+width,y),(x+width,y+height/2)], layer=layer)) # top-right
+		if char in [0,1,2,6,7,8,9]: ret.append(sdxf.Line(points=[(x+width,y+height/2),(x+width,y+height)], layer=layer)) # bottom-right
+		if char in [0,2,3,5,6,8,9]: ret.append(sdxf.Line(points=[(x+width,y+height),(x,y+height)], layer=layer)) # bottom bar
+		if char in [0,2,3,4,6,8,9]: ret.append(sdxf.Line(points=[(x,y),(x,y+height/2)], layer=layer)) # top-left
+		if char in [0,3,4,5,6,8]: ret.append(sdxf.Line(points=[(x,y+height/2),(x,y+height)], layer=layer)) # bottom-left
+		if char in [2,3,4,5,6,8,9]: ret.append(sdxf.Line(points=[(x,y+height/2),(x+width,y+height/2)], layer=layer)) # middle bar
 		return ret
 
 	def makeOutline(self, d, place):
+		for layer in d.layers:
+			if layer.name == "TEXT_LAYER":
+				break
+		else:
+			print "new text layer"
+			d.layers.append(sdxf.Layer(name="TEXT_LAYER", color=DXFColours.Blue.value()))
 		def centredText(text,x,y,width,height):
 			itemWidth = (width-((len(text)+1)*spacing))/len(text)
 			ret = []
 			for i in range(len(text)):
-				ret.extend(self.drawNumber(text[i], x+(i*(itemWidth+spacing))+spacing,y+spacing,itemWidth,height-(spacing*2)))
+				ret.extend(self.drawNumber(text[i], x+(i*(itemWidth+spacing))+spacing,y+spacing,itemWidth,height-(spacing*2),layer="TEXT_LAYER"))
 			return ret
 
 		pts = self.makeFaceOutline()
