@@ -525,7 +525,13 @@ class Drawing(_Collection):
         self.save()
     def save(self):
         test=open(self.fileName,'wb')
-        test.write(str(self))
+        data = str(self).split(newline)
+        out = []
+        for line in data:
+            if len(line)<3:
+                line = " "*(3-len(line))+line
+            out.append(line)
+        test.write(newline.join(out))
         test.close()
 
 #---extras
