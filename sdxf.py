@@ -24,12 +24,14 @@ to support LWPOLYLINE.
 
 import copy
 
+newline = "\r\n"
+
 ####1) Private (only for developpers)
 _HEADER_POINTS=['insbase','extmin','extmax']
 #---helper functions
 def _point(x,index=0):
     """Convert tuple to a dxf point"""
-    return '\n'.join(['%s\n%s'%((i+1)*10+index,x[i]) for i in range(len(x))])
+    return newline.join([('%s' + newline + '%s')%((i+1)*10+index,x[i]) for i in range(len(x))])
 
 def _points(p):
     """Convert a list of tuples to dxf points"""
@@ -66,13 +68,13 @@ class _Entity(_Call):
         """Return common group codes as a string."""
         if self.parent:parent=self.parent
         else:parent=self
-        result='8\n%s'%parent.layer
-        if parent.color!=None:          result+='\n62\n%s'%parent.color
-        if parent.extrusion!=None:      result+='\n%s'%_point(parent.extrusion,200)
-        if parent.lineType!=None:       result+='\n6\n%s'%parent.lineType
-        if parent.lineWeight!=None:     result+='\n370\n%s'%parent.lineWeight
-        if parent.lineTypeScale!=None:  result+='\n48\n%s'%parent.lineTypeScale
-        if parent.thickness!=None:      result+='\n39\n%s'%parent.thickness
+        result='8' + newline + '%s'%parent.layer
+        if parent.color!=None:          result+= newline + '62' + newline + '%s'%parent.color
+        if parent.extrusion!=None:      result+= newline + '%s'%_point(parent.extrusion,200)
+        if parent.lineType!=None:       result+= newline + '6' + newline + '%s'%parent.lineType
+        if parent.lineWeight!=None:     result+= newline + '370' + newline + '%s'%parent.lineWeight
+        if parent.lineTypeScale!=None:  result+= newline + '48' + newline + '%s'%parent.lineTypeScale
+        if parent.thickness!=None:      result+= newline + '39' + newline + '%s'%parent.thickness
         return result
     
 class _Entities:
@@ -81,7 +83,7 @@ class _Entities:
         return []
         
     def __str__(self):
-        return '\n'.join([str(x) for x in self.__dxf__()])
+        return  newline + ''.join([str(x) for x in self.__dxf__()])
         
 class _Collection(_Call):
     """Base class to expose entities methods to main object."""
@@ -164,7 +166,7 @@ class Arc(_Entity):
         self.startAngle=startAngle
         self.endAngle=endAngle
     def __str__(self):
-        return '0\nARC\n%s\n%s\n40\n%s\n50\n%s\n51\n%s'%\
+        return ('0' + newline + 'ARC' + newline + '%s' + newline + '%s' + newline + '40' + newline + '%s' + newline + '50' + newline + '%s' + newline + '51' + newline + '%s')%\
                (self._common(),_point(self.center),
                 self.radius,self.startAngle,self.endAngle)
 
@@ -175,7 +177,7 @@ class Circle(_Entity):
         self.center=center
         self.radius=radius
     def __str__(self):
-        return '0\nCIRCLE\n%s\n%s\n40\n%s'%\
+        return ('0' + newline + 'CIRCLE' + newline + '%s' + newline + '%s' + newline + '40' + newline + '%s')%\
                (self._common(),_point(self.center),self.radius)
 
 class Face(_Entity):
@@ -184,7 +186,7 @@ class Face(_Entity):
         _Entity.__init__(self,**common)
         self.points=points
     def __str__(self):
-        return '\n'.join(['0\n3DFACE',self._common()]+
+        return  newline + ''.join(['0' + newline + '3DFACE',self._common()]+
                          _points(self.points)
                          )
 
@@ -208,16 +210,16 @@ class Insert(_Entity):
         self.rotation=rotation
         
     def __str__(self):
-        result='0\nINSERT\n2\n%s\n%s\n%s'%\
+        result='0' + newline + 'INSERT' + newline + '2' + newline + '%s' + newline + '%s' + newline + '%s'%\
                 (self.name,self._common(),_point(self.point))
-        if self.xscale!=None:result+='\n41\n%s'%self.xscale
-        if self.yscale!=None:result+='\n42\n%s'%self.yscale
-        if self.zscale!=None:result+='\n43\n%s'%self.zscale
-        if self.rotation:result+='\n50\n%s'%self.rotation
-        if self.cols!=None:result+='\n70\n%s'%self.cols
-        if self.colspacing!=None:result+='\n44\n%s'%self.colspacing
-        if self.rows!=None:result+='\n71\n%s'%self.rows
-        if self.rowspacing!=None:result+='\n45\n%s'%self.rowspacing
+        if self.xscale!=None:result+= newline + '41' + newline + '%s'%self.xscale
+        if self.yscale!=None:result+= newline + '42' + newline + '%s'%self.yscale
+        if self.zscale!=None:result+= newline + '43' + newline + '%s'%self.zscale
+        if self.rotation:result+= newline + '50' + newline + '%s'%self.rotation
+        if self.cols!=None:result+= newline + '70' + newline + '%s'%self.cols
+        if self.colspacing!=None:result+= newline + '44' + newline + '%s'%self.colspacing
+        if self.rows!=None:result+= newline + '71' + newline + '%s'%self.rows
+        if self.rowspacing!=None:result+= newline + '45' + newline + '%s'%self.rowspacing
         return result
         
 class Line(_Entity):
@@ -226,7 +228,7 @@ class Line(_Entity):
         _Entity.__init__(self,**common)
         self.points=points
     def __str__(self):
-        return '\n'.join(['0\nLINE',self._common()]+
+        return newline.join(['0' + newline + 'LINE',self._common()]+
                          _points(self.points))
 
 class LwPolyLine(_Entity):
@@ -237,12 +239,12 @@ class LwPolyLine(_Entity):
         self.flag=flag
         self.width=width
     def __str__(self):
-        result= '0\nLWPOLYLINE\n%s\n70\n%s'%\
+        result= ('0' + newline + 'LWPOLYLINE' + newline + '%s' + newline + '70' + newline + '%s')%\
             (self._common(),self.flag)
-        result+='\n90\n%s'%len(self.points)
+        result+= newline + '90' + newline + '%s'%len(self.points)
         for point in self.points:
-            result+='\n%s'%_point(point)
-        if self.width:result+='\n40\n%s\n41\n%s'%(self.width,self.width)
+            result+= newline + '%s'%_point(point)
+        if self.width:result+= newline + '40' + newline + '%s' + newline + '41' + newline + '%s'%(self.width,self.width)
         return result
 
 
@@ -254,12 +256,12 @@ class PolyLine(_Entity):
         self.flag=flag
         self.width=width
     def __str__(self):
-        result= '0\nPOLYLINE\n%s\n70\n%s'%\
+        result= '0' + newline + 'POLYLINE' + newline + '%s' + newline + '70' + newline + '%s'%\
             (self._common(),self.flag)
         for point in self.points:
-            result+='\n0\nVERTEX\n%s'%_point(point)
-            if self.width:result+='\n40\n%s\n41\n%s'%(self.width,self.width)
-        result+='\n0\nSEQEND'
+            result+= newline + '0' + newline + 'VERTEX' + newline + '%s'%_point(point)
+            if self.width:result+= newline + '40' + newline + '%s' + newline + '41' + newline + '%s'%(self.width,self.width)
+        result+= newline + '0' + newline + 'SEQEND'
         return result
 
 class Point(_Entity):
@@ -274,7 +276,7 @@ class Solid(_Entity):
         _Entity.__init__(self,**common)
         self.points=points
     def __str__(self):
-        return '\n'.join(['0\nSOLID',self._common()]+
+        return  newline + ''.join(['0' + newline + 'SOLID',self._common()]+
                          _points(self.points[:2]+[self.points[3],self.points[2]])
                          )
 
@@ -296,16 +298,16 @@ class Text(_Entity):
         self.style=style
         self.xscale=xscale
     def __str__(self):
-        result= '0\nTEXT\n%s\n%s\n40\n%s\n1\n%s'%\
+        result= '0' + newline + 'TEXT' + newline + '%s' + newline + '%s' + newline + '40' + newline + '%s' + newline + '1' + newline + '%s'%\
                 (self._common(),_point(self.point),self.height,self.text)
-        if self.rotation:result+='\n50\n%s'%self.rotation
-        if self.xscale:result+='\n41\n%s'%self.xscale
-        if self.obliqueAngle:result+='\n51\n%s'%self.obliqueAngle
-        if self.style:result+='\n7\n%s'%self.style.name.upper()
-        if self.flag:result+='\n71\n%s'%self.flag
-        if self.justifyhor:result+='\n72\n%s'%self.justifyhor
-        if self.alignment:result+='\n%s'%_point(self.alignment,1)
-        if self.justifyver:result+='\n73\n%s'%self.justifyver
+        if self.rotation:result+= newline + '50' + newline + '%s'%self.rotation
+        if self.xscale:result+= newline + '41' + newline + '%s'%self.xscale
+        if self.obliqueAngle:result+= newline + '51' + newline + '%s'%self.obliqueAngle
+        if self.style:result+= newline + '7' + newline + '%s'%self.style.name.upper()
+        if self.flag:result+= newline + '71' + newline + '%s'%self.flag
+        if self.justifyhor:result+= newline + '72' + newline + '%s'%self.justifyhor
+        if self.alignment:result+= newline + '%s'%_point(self.alignment,1)
+        if self.justifyver:result+= newline + '73' + newline + '%s'%self.justifyver
         return result
 
 class Mtext(Text):
@@ -318,7 +320,7 @@ class Mtext(Text):
         self.width=width
         self.down=down
     def __str__(self):
-        texts=self.text.replace('\r\n','\n').split('\n')
+        texts=self.text.replace('\r' + newline + '', newline + '').split( newline + '')
         if not self.down:texts.reverse()
         result=''
         x=y=0
@@ -326,7 +328,7 @@ class Mtext(Text):
         else:spacingWidth=self.height*self.spacingFactor
         for text in texts:
             while text:
-                result+='\n%s'%Text(text[:self.width],
+                result+= newline + '%s'%Text(text[:self.width],
                     point=(self.point[0]+x*spacingWidth,
                            self.point[1]+y*spacingWidth,
                            self.point[2]),
@@ -364,19 +366,19 @@ class Mtext(Text):
 ##        input=self.text
 ##        text=''
 ##        while len(input)>250:
-##            text+='\n3\n%s'%input[:250]
+##            text+= newline + '3' + newline + '%s'%input[:250]
 ##            input=input[250:]
-##        text+='\n1\n%s'%input
-##        result= '0\nMTEXT\n%s\n%s\n40\n%s\n41\n%s\n71\n%s\n72\n%s%s\n43\n%s\n50\n%s'%\
+##        text+= newline + '1' + newline + '%s'%input
+##        result= '0' + newline + 'MTEXT' + newline + '%s' + newline + '%s' + newline + '40' + newline + '%s' + newline + '41' + newline + '%s' + newline + '71' + newline + '%s' + newline + '72' + newline + '%s%s' + newline + '43' + newline + '%s' + newline + '50' + newline + '%s'%\
 ##                (self._common(),_point(self.point),self.charHeight,self.width,
 ##                 self.attachment,self.direction,text,
 ##                 self.height,
 ##                 self.rotation)
-##        if self.style:result+='\n7\n%s'%self.style
-##        if self.xdirection:result+='\n%s'%_point(self.xdirection,1)
-##        if self.charWidth:result+='\n42\n%s'%self.charWidth
-##        if self.spacingStyle:result+='\n73\n%s'%self.spacingStyle
-##        if self.spacingFactor:result+='\n44\n%s'%self.spacingFactor
+##        if self.style:result+= newline + '7' + newline + '%s'%self.style
+##        if self.xdirection:result+= newline + '%s'%_point(self.xdirection,1)
+##        if self.charWidth:result+= newline + '42' + newline + '%s'%self.charWidth
+##        if self.spacingStyle:result+= newline + '73' + newline + '%s'%self.spacingStyle
+##        if self.spacingFactor:result+= newline + '44' + newline + '%s'%self.spacingFactor
 ##        return result
     
 #---tables
@@ -390,8 +392,8 @@ class Block(_Collection):
         self.flag=0
         self.base=base
     def __str__(self):
-        e='\n'.join([str(x)for x in self.entities])
-        return '0\nBLOCK\n8\n%s\n2\n%s\n70\n%s\n%s\n3\n%s\n%s\n0\nENDBLK'%\
+        e= newline + ''.join([str(x)for x in self.entities])
+        return ('0' + newline + 'BLOCK' + newline + '8' + newline + '%s' + newline + '2' + newline + '%s' + newline + '70' + newline + '%s' + newline + '%s' + newline + '3' + newline + '%s' + newline + '%s' + newline + '0' + newline + 'ENDBLK')%\
                (self.layer,self.name.upper(),self.flag,_point(self.base),self.name.upper(),e)
             
 class Layer(_Call):
@@ -402,7 +404,7 @@ class Layer(_Call):
         self.lineType=lineType
         self.flag=flag
     def __str__(self):
-        return '0\nLAYER\n2\n%s\n70\n%s\n62\n%s\n6\n%s'%\
+        return ('0' + newline + 'LAYER' + newline + '2' + newline + '%s' + newline + '70' + newline + '%s' + newline + '62' + newline + '%s' + newline + '6' + newline + '%s')%\
                (self.name.upper(),self.flag,self.color,self.lineType)
     
 class LineType(_Call):
@@ -414,7 +416,7 @@ class LineType(_Call):
         self.elements=copy.copy(elements)
         self.flag=flag
     def __str__(self):
-        return '0\nLTYPE\n2\n%s\n70\n%s\n3\n%s\n72\n65\n73\n%s\n40\n0.0'%\
+        return ('0' + newline + 'LTYPE' + newline + '2' + newline + '%s' + newline + '70' + newline + '%s' + newline + '3' + newline + '%s' + newline + '72' + newline + '65' + newline + '73' + newline + '%s' + newline + '40' + newline + '0.0')%\
             (self.name.upper(),self.flag,self.description,len(self.elements))
 
 class Style(_Call):
@@ -431,7 +433,7 @@ class Style(_Call):
         self.font=font
         self.bigFont=bigFont
     def __str__(self):
-        return '0\nSTYLE\n2\n%s\n70\n%s\n40\n%s\n41\n%s\n50\n%s\n71\n%s\n42\n%s\n3\n%s\n4\n%s'%\
+        return ('0' + newline + 'STYLE' + newline + '2' + newline + '%s' + newline + '70' + newline + '%s' + newline + '40' + newline + '%s' + newline + '41' + newline + '%s' + newline + '50' + newline + '%s' + newline + '71' + newline + '%s' + newline + '42' + newline + '%s' + newline + '3' + newline + '%s' + newline + '4' + newline + '%s')%\
                (self.name.upper(),self.flag,self.flag,self.widthFactor,
                 self.obliqueAngle,self.mirror,self.lastHeight,
                 self.font.upper(),self.bigFont.upper())
@@ -453,7 +455,7 @@ class View(_Call):
         self.twist=twist
         self.mode=mode
     def __str__(self):
-        return '0\nVIEW\n2\n%s\n70\n%s\n40\n%s\n%s\n41\n%s\n%s\n%s\n42\n%s\n43\n%s\n44\n%s\n50\n%s\n71\n%s'%\
+        return ('0' + newline + 'VIEW' + newline + '2' + newline + '%s' + newline + '70' + newline + '%s' + newline + '40' + newline + '%s' + newline + '%s' + newline + '41' + newline + '%s' + newline + '%s' + newline + '%s' + newline + '42' + newline + '%s' + newline + '43' + newline + '%s' + newline + '44' + newline + '%s' + newline + '50' + newline + '%s' + newline + '71' + newline + '%s')%\
                (self.name,self.flag,self.height,_point(self.center),self.width,
                 _point(self.direction,1),_point(self.target,2),self.lens,
                 self.frontClipping,self.backClipping,self.twist,self.mode)
@@ -483,23 +485,23 @@ class Drawing(_Collection):
         self.blocks=copy.copy(blocks)
         self.fileName=fileName
         #private
-        self.acadver='9\n$ACADVER\n1\nAC1006'
+        self.acadver='9' + newline + '$ACADVER' + newline + '1' + newline + 'AC1006'
     def _name(self,x):
         """Helper function for self._point"""
-        return '9\n$%s'%x.upper()
+        return '9' + newline + '$%s'%x.upper()
     def _point(self,name,x):
         """Point setting from drawing like extmin,extmax,..."""
-        return '%s\n%s'%(self._name(name),_point(x))
+        return ('%s' + newline + '%s')%(self._name(name),_point(x))
     def _section(self,name,x):
         """Sections like tables,blocks,entities,..."""
-        if x:xstr='\n'+'\n'.join(x)
+        if x:xstr= newline + newline.join(x)
         else:xstr=''
-        return '0\nSECTION\n2\n%s%s\n0\nENDSEC'%(name.upper(),xstr)
+        return ('0' + newline + 'SECTION' + newline + '2' + newline + '%s%s' + newline + '0' + newline + 'ENDSEC')%(name.upper(),xstr)
     def _table(self,name,x):
         """Tables like ltype,layer,style,..."""
-        if x:xstr='\n'+'\n'.join(x)
+        if x:xstr= newline + newline.join(x)
         else:xstr=''
-        return '0\nTABLE\n2\n%s\n70\n%s%s\n0\nENDTAB'%(name.upper(),len(x),xstr)
+        return ('0' + newline + 'TABLE' + newline + '2' + newline + '%s' + newline + '70' + newline + '%s%s' + newline + '0' + newline + 'ENDTAB')%(name.upper(),len(x),xstr)
     def __str__(self):
         """Returns drawing as dxf string."""
         header=[self.acadver]+[self._point(attr,getattr(self,attr)) for attr in _HEADER_POINTS]
@@ -516,16 +518,15 @@ class Drawing(_Collection):
 
         entities=self._section('entities',[str(x) for x in self.entities])
         
-        all='\n'.join([header,tables,blocks,entities,'0\nEOF\n'])
+        all= newline.join([header,tables,blocks,entities,'0' + newline + 'EOF' + newline + ''])
         return all
     def saveas(self,fileName):
         self.fileName=fileName
         self.save()
     def save(self):
-        test=open(self.fileName,'w')
+        test=open(self.fileName,'wb')
         test.write(str(self))
         test.close()
-
 
 #---extras
 class Rectangle(_Entity):
@@ -543,9 +544,9 @@ class Rectangle(_Entity):
             (self.point[0]+self.width,self.point[1]+self.height,self.point[2]),
             (self.point[0],self.point[1]+self.height,self.point[2]),self.point]
         if self.solid:
-            result+='\n%s'%Solid(points=points[:-1],parent=self.solid)
+            result+= newline + '%s'%Solid(points=points[:-1],parent=self.solid)
         if self.line:
-            for i in range(4):result+='\n%s'%\
+            for i in range(4):result+= newline + '%s'%\
                 Line(points=[points[i],points[i+1]],parent=self)
         return result[1:]
 
@@ -559,7 +560,7 @@ class LineList(_Entity):
         if self.closed:points=self.points+[self.points[0]]
         else: points=self.points
         result=''
-        for i in range(len(points)-1):result+='\n%s'%\
+        for i in range(len(points)-1):result+= newline + '%s'%\
             Line(points=[points[i],points[i+1]],parent=self)
         return result[1:]
 
@@ -584,7 +585,7 @@ def main():
     d.append(Face(points=[(0,0,0),(1,0,0),(1,1,0),(0,1,0)],color=4))
     d.append(Insert('test',point=(3,3,3),cols=5,colspacing=2))
     d.append(Line(points=[(0,0,0),(1,1,1)]))
-    d.append(Mtext('Click on Ads\nmultiple lines with mtext',point=(1,1,1),color=5,rotation=90))
+    d.append(Mtext('Click on Ads' + newline + 'multiple lines with mtext',point=(1,1,1),color=5,rotation=90))
     d.append(Text('Please donate!',point=(3,0,1)))
     d.append(Rectangle(point=(2,2,2),width=4,height=3,color=6,solid=Solid(color=2)))
     d.append(Solid(points=[(4,4,0),(5,4,0),(7,8,0),(9,9,0)],color=3))
