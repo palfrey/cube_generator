@@ -310,15 +310,15 @@ class Face:
 		ret = []
 		if char in [0,2,3,5,6,7,8,9]: # top bar
 			ret.append(sdxf.Line(points=[(x,y),(x+width,y)], layer=layer))
-		if char in [0,1,4,5,8,9] or (reverse and char in [2,3,7]) or (not reverse and char in [6]): # top-right
+		if char in [0,1,4,8,9] or (reverse and char in [2,3,7]) or (not reverse and char in [5,6]): # top-right
 			ret.append(sdxf.Line(points=[(x+width,y),(x+width,y+height/2)], layer=layer))
-		if char in [0,1,6,8] or (reverse and char in [3,4,7,9]) or (not reverse and char in [2]): # bottom-right
+		if char in [0,1,6,8] or (reverse and char in [3,4,5,7,9]) or (not reverse and char in [2]): # bottom-right
 			ret.append(sdxf.Line(points=[(x+width,y+height/2),(x+width,y+height)], layer=layer))
 		if char in [0,2,3,5,6,8,9]: # bottom bar
 			ret.append(sdxf.Line(points=[(x+width,y+height),(x,y+height)], layer=layer))
-		if char in [0,4,8,9] or (reverse and char in [6]) or (not reverse and char in [2,3,7]): # top-left
+		if char in [0,4,8,9] or (reverse and char in [5,6]) or (not reverse and char in [2,3,7]): # top-left
 			ret.append(sdxf.Line(points=[(x,y),(x,y+height/2)], layer=layer))
-		if char in [0,5,6,8] or (reverse and char in [2]) or (not reverse and char in [3,4,7,9]): # bottom-left
+		if char in [0,6,8] or (reverse and char in [2]) or (not reverse and char in [3,4,5,7,9]): # bottom-left
 			ret.append(sdxf.Line(points=[(x,y+height/2),(x,y+height)], layer=layer))
 		if char in [2,3,4,5,6,8,9]: # middle bar
 			ret.append(sdxf.Line(points=[(x,y+height/2),(x+width,y+height/2)], layer=layer))
