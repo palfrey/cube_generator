@@ -403,6 +403,8 @@ class Layer(_Call):
         self.color=color
         self.lineType=lineType
         self.flag=flag
+    def __repr__(self):
+        return "<sdxf.Layer: %s>"%self.name
     def __str__(self):
         return ('0' + newline + 'LAYER' + newline + '2' + newline + '%s' + newline + '70' + newline + '%s' + newline + '62' + newline + '%s' + newline + '6' + newline + '%s')%\
                (self.name.upper(),self.flag,self.color,self.lineType)
