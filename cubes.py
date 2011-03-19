@@ -339,10 +339,13 @@ class Face:
 		horizspace = (self.width-2.0)/3 # unit (i.e 1/4) for horizontal spacing. -2 to cope with notches
 		vertspace = (self.height-2.0)/3
 		spacing = (self.width-2.0)/24
+		if spacing < 0.15:
+			spacing = 0.15
+		print "spacing", spacing
 
 		print "width",self.width,horizspace,vertspace
 
-		d.extend(centredText("%d"%self.index, place[0]+1+horizspace+spacing, place[1]+1+vertspace, horizspace-spacing, vertspace))
+		d.extend(centredText("%d"%self.index, place[0]+1+horizspace, place[1]+1+vertspace, horizspace, vertspace))
 
 		assert [x for x in self.neighbour if x==None] == [],self.neighbour
 		print self.index,[x.index for x in self.neighbour],self.colour
