@@ -303,22 +303,22 @@ class Face:
 		for y in sorted(out):
 			print out[y]
 
-	def drawNumber(self, char, x, y, width, height, layer, reversed = False):
+	def drawNumber(self, char, x, y, width, height, layer, reverse = False):
 		char = int(char)
 		if char == 1:
 			return [sdxf.Line(points=[(x+width/2,y),(x+width/2,y+height)], layer=layer)]
 		ret = []
 		if char in [0,2,3,5,6,7,8,9]: # top bar
 			ret.append(sdxf.Line(points=[(x,y),(x+width,y)], layer=layer))
-		if char in [0,1,4,5,8,9] or (reversed and char in [2,3,7]) or (not reversed and char in [6]): # top-right
+		if char in [0,1,4,5,8,9] or (reverse and char in [2,3,7]) or (not reverse and char in [6]): # top-right
 			ret.append(sdxf.Line(points=[(x+width,y),(x+width,y+height/2)], layer=layer))
-		if char in [0,1,6,8] or (reversed and char in [3,4,7,9]) or (not reversed and char in [2]): # bottom-right
+		if char in [0,1,6,8] or (reverse and char in [3,4,7,9]) or (not reverse and char in [2]): # bottom-right
 			ret.append(sdxf.Line(points=[(x+width,y+height/2),(x+width,y+height)], layer=layer))
 		if char in [0,2,3,5,6,8,9]: # bottom bar
 			ret.append(sdxf.Line(points=[(x+width,y+height),(x,y+height)], layer=layer))
-		if char in [0,4,8,9] or (reversed and char in [6]) or (not reversed and char in [2,3,7]): # top-left
+		if char in [0,4,8,9] or (reverse and char in [6]) or (not reverse and char in [2,3,7]): # top-left
 			ret.append(sdxf.Line(points=[(x,y),(x,y+height/2)], layer=layer))
-		if char in [0,5,6,8] or (reversed and char in [2]) or (not reversed and char in [3,4,7,9]): # bottom-left
+		if char in [0,5,6,8] or (reverse and char in [2]) or (not reverse and char in [3,4,7,9]): # bottom-left
 			ret.append(sdxf.Line(points=[(x,y+height/2),(x,y+height)], layer=layer))
 		if char in [2,3,4,5,6,8,9]: # middle bar
 			ret.append(sdxf.Line(points=[(x,y+height/2),(x+width,y+height/2)], layer=layer))
@@ -333,11 +333,13 @@ class Face:
 		else:
 			print "new text layer"
 			d.layers.append(sdxf.Layer(name="TEXT_LAYER", color=DXFColours.Blue.value()))
-		def centredText(text,x,y,width,height, reversed=False):
+		def centredText(text,x,y,width,height, reverse=False):
 			itemWidth = (width-((len(text)+1)*spacing))/len(text)
 			ret = []
+			if not reverse:
+				text = tuple(reversed(text))
 			for i in range(len(text)):
-				ret.extend(self.drawNumber(text[i], x+(i*(itemWidth+spacing))+spacing,y+spacing,itemWidth,height-(spacing*2),layer="TEXT_LAYER", reversed = reversed))
+				ret.extend(self.drawNumber(text[i], x+(i*(itemWidth+spacing))+spacing,y+spacing,itemWidth,height-(spacing*2),layer="TEXT_LAYER", reverse = reverse))
 			return ret
 
 		pts = self.makeFaceOutline()
@@ -354,21 +356,21 @@ class Face:
 		print "width",self.width,horizspace,vertspace
 
 		# These pieces have their directions on the wrong side, so they need flipping
-		reversed = self.direction in [Direction.POS_Y, Direction.NEG_Z, Direction.NEG_X]
+		reverse = self.direction in [Direction.POS_Y, Direction.NEG_Z, Direction.NEG_X]
 
-		outline.extend(centredText("%d"%self.index, 1+horizspace, 1+vertspace, horizspace, vertspace, reversed))
+		outline.extend(centredText("%d"%self.index, 1+horizspace, 1+vertspace, horizspace, vertspace, reverse))
 
 		assert [x for x in self.neighbour if x==None] == [],self.neighbour
-		print self.index,[x.index for x in self.neighbour],self.colour, self.direction, reversed
+		print self.index,[x.index for x in self.neighbour],self.colour, self.direction, reverse
 
-		outline.extend(centredText("%d"%self.neighbour[0].index, 1, 1+vertspace, horizspace, vertspace, reversed))
-		outline.extend(centredText("%d"%self.neighbour[1].index, 1+horizspace, 1, horizspace, vertspace, reversed))
-		outline.extend(centredText("%d"%self.neighbour[2].index, 1+(horizspace*2), 1+vertspace, horizspace, vertspace, reversed))
-		outline.extend(centredText("%d"%self.neighbour[3].index, 1+horizspace, 1+(vertspace*2), horizspace, vertspace, reversed))
+		outline.extend(centredText("%d"%self.neighbour[0].index, 1, 1+vertspace, horizspace, vertspace, reverse))
+		outline.extend(centredText("%d"%self.neighbour[1].index, 1+horizspace, 1, horizspace, vertspace, reverse))
+		outline.extend(centredText("%d"%self.neighbour[2].index, 1+(horizspace*2), 1+vertspace, horizspace, vertspace, reverse))
+		outline.extend(centredText("%d"%self.neighbour[3].index, 1+horizspace, 1+(vertspace*2), horizspace, vertspace, reverse))
 
 		# rotate all the items 180 degrees so they're the right way up in QCad
 		for item in outline:
-			if reversed: # except the reversed ones, which just want flipping
+			if reverse: # except the reverse ones, which just want flipping
 				item.points = [(place[0]+a,place[1]-b+self.height) for (a,b) in item.points]
 			else:
 				item.points = [(place[0]-a+self.width,place[1]-b+self.height) for (a,b) in item.points]
