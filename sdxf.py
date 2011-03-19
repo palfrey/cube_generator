@@ -51,7 +51,7 @@ class _Call:
     
 class _Entity(_Call):
     """Base class for _common group codes for entities."""
-    def __init__(self,color=None,extrusion=None,layer='0',
+    def __init__(self,color=None,extrusion=None,layer='PYDXF',
                  lineType=None,lineTypeScale=None,lineWeight=None,
                  thickness=None,parent=None):
         """None values will be omitted."""
@@ -384,7 +384,7 @@ class Mtext(Text):
 #---tables
 class Block(_Collection):
     """Use list methods to add entities, eg append."""
-    def __init__(self,name,layer='0',flag=0,base=(0,0,0),entities=[]):
+    def __init__(self,name,layer='PYDXF',flag=0,base=(0,0,0),entities=[]):
         self.entities=copy.copy(entities)
         _Collection.__init__(self,entities)
         self.layer=layer
@@ -398,7 +398,7 @@ class Block(_Collection):
             
 class Layer(_Call):
     """Layer"""
-    def __init__(self,name='pydxf',color=7,lineType='continuous',flag=64):
+    def __init__(self,name='PYDXF',color=7,lineType='continuous',flag=64):
         self.name=name
         self.color=color
         self.lineType=lineType
