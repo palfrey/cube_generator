@@ -319,6 +319,8 @@ class Face:
 		return ret
 
 	def makeOutline(self, d, place):
+		outline = []
+
 		for layer in d.layers:
 			if layer.name == "TEXT_LAYER":
 				break
@@ -333,7 +335,7 @@ class Face:
 			return ret
 
 		pts = self.makeFaceOutline()
-		d.append(sdxf.LwPolyLine(points=[(a+place[0],b+place[1]) for (a,b) in pts]))
+		outline.append(sdxf.LwPolyLine(points=pts))
 
 		# text spacing is 1/4 for the first item, 2/4 for the centre and 1/4 for the last
 		horizspace = (self.width-2.0)/3 # unit (i.e 1/4) for horizontal spacing. -2 to cope with notches
@@ -345,15 +347,21 @@ class Face:
 
 		print "width",self.width,horizspace,vertspace
 
-		d.extend(centredText("%d"%self.index, place[0]+1+horizspace, place[1]+1+vertspace, horizspace, vertspace))
+		outline.extend(centredText("%d"%self.index, 1+horizspace, 1+vertspace, horizspace, vertspace))
 
 		assert [x for x in self.neighbour if x==None] == [],self.neighbour
 		print self.index,[x.index for x in self.neighbour],self.colour
 
-		d.extend(centredText("%d"%self.neighbour[0].index, place[0]+1, place[1]+1+vertspace, horizspace, vertspace))
-		d.extend(centredText("%d"%self.neighbour[1].index, place[0]+1+horizspace, place[1]+1, horizspace, vertspace))
-		d.extend(centredText("%d"%self.neighbour[2].index, place[0]+1+(horizspace*2), place[1]+1+vertspace, horizspace, vertspace))
-		d.extend(centredText("%d"%self.neighbour[3].index, place[0]+1+horizspace, place[1]+1+(vertspace*2), horizspace, vertspace))
+		outline.extend(centredText("%d"%self.neighbour[0].index, 1, 1+vertspace, horizspace, vertspace))
+		outline.extend(centredText("%d"%self.neighbour[1].index, 1+horizspace, 1, horizspace, vertspace))
+		outline.extend(centredText("%d"%self.neighbour[2].index, 1+(horizspace*2), 1+vertspace, horizspace, vertspace))
+		outline.extend(centredText("%d"%self.neighbour[3].index, 1+horizspace, 1+(vertspace*2), horizspace, vertspace))
+
+		# rotate all the items 180 degrees so they're the right way up in QCad
+		for item in outline:
+			item.points = [(place[0]-a+self.width,place[1]-b+self.height) for (a,b) in item.points]
+
+		d.extend(outline)
 
 	def makeFaceOutline(self):
 		#self.printFace()
