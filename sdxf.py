@@ -83,7 +83,7 @@ class _Entities:
         return []
         
     def __str__(self):
-        return  newline + ''.join([str(x) for x in self.__dxf__()])
+        return  newline.join([str(x) for x in self.__dxf__()])
         
 class _Collection(_Call):
     """Base class to expose entities methods to main object."""
@@ -186,7 +186,7 @@ class Face(_Entity):
         _Entity.__init__(self,**common)
         self.points=points
     def __str__(self):
-        return  newline + ''.join(['0' + newline + '3DFACE',self._common()]+
+        return  newline.join(['0' + newline + '3DFACE',self._common()]+
                          _points(self.points)
                          )
 
@@ -276,7 +276,7 @@ class Solid(_Entity):
         _Entity.__init__(self,**common)
         self.points=points
     def __str__(self):
-        return  newline + ''.join(['0' + newline + 'SOLID',self._common()]+
+        return  newline.join(['0' + newline + 'SOLID',self._common()]+
                          _points(self.points[:2]+[self.points[3],self.points[2]])
                          )
 
@@ -320,7 +320,7 @@ class Mtext(Text):
         self.width=width
         self.down=down
     def __str__(self):
-        texts=self.text.replace('\r' + newline + '', newline + '').split( newline + '')
+        texts=self.text.replace('\r\n', '\n').split(newline)
         if not self.down:texts.reverse()
         result=''
         x=y=0
@@ -392,7 +392,7 @@ class Block(_Collection):
         self.flag=0
         self.base=base
     def __str__(self):
-        e= newline + ''.join([str(x)for x in self.entities])
+        e= newline.join([str(x)for x in self.entities])
         return ('0' + newline + 'BLOCK' + newline + '8' + newline + '%s' + newline + '2' + newline + '%s' + newline + '70' + newline + '%s' + newline + '%s' + newline + '3' + newline + '%s' + newline + '%s' + newline + '0' + newline + 'ENDBLK')%\
                (self.layer,self.name.upper(),self.flag,_point(self.base),self.name.upper(),e)
             
@@ -520,7 +520,7 @@ class Drawing(_Collection):
 
         entities=self._section('entities',[str(x) for x in self.entities])
         
-        all= newline.join([header,tables,blocks,entities,'0' + newline + 'EOF' + newline + ''])
+        all= newline.join([header,tables,blocks,entities,'0' + newline + 'EOF' + newline])
         return all
     def saveas(self,fileName):
         self.fileName=fileName
