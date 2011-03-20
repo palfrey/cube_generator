@@ -324,7 +324,7 @@ class Face:
 			ret.append(sdxf.Line(points=[(x,y+height/2),(x+width,y+height/2)], layer=layer))
 		return ret
 
-	def makeOutline(self, d, place):
+	def makeOutline(self, d, place, invert=False):
 		outline = []
 
 		for layer in d.layers:
@@ -357,6 +357,9 @@ class Face:
 
 		# These pieces have their directions on the wrong side, so they need flipping
 		reverse = self.direction in [Direction.POS_Y, Direction.NEG_Z, Direction.NEG_X]
+
+		if invert:
+			reverse = not reverse
 
 		outline.extend(centredText("%d"%self.index, 1+horizspace, 1+vertspace, horizspace, vertspace, reverse))
 
@@ -511,6 +514,7 @@ if __name__ == "__main__":
 
 	parser.add_option("-s","--sheet-size", default=(100,200),action="callback", callback=size_callback, nargs=1, dest="sheet_size",type="string")
 	parser.add_option("-r","--random-seed",default=None, dest="seed")
+	parser.add_option("-i","--invert-pieces",action="store_true",default=False,dest="invert",help="Generate pieces with instructions on the outside")
 
 	(opts,args) = parser.parse_args()
 
@@ -602,7 +606,7 @@ if __name__ == "__main__":
 	x,y = 0,0
 	for face in sorted(faces, key=operator.attrgetter("index")):
 		#print face, face.colour
-		face.makeOutline(plans, (x,y))
+		face.makeOutline(plans, (x,y), opts.invert)
 		x += opts.cube_side+1
 		if x + opts.cube_side > opts.sheet_size[0]:
 			x = 0
