@@ -349,11 +349,10 @@ class Face:
 		horizspace = (self.width-2.0)/3 # unit (i.e 1/4) for horizontal spacing. -2 to cope with notches
 		vertspace = (self.height-2.0)/3
 		spacing = (self.width-2.0)/24
-		if spacing < 0.15:
-			spacing = 0.15
-		print "spacing", spacing
+		if spacing < 0.25:
+			spacing = 0.25
 
-		print "width",self.width,horizspace,vertspace
+		print "width",self.width,horizspace,vertspace, spacing
 
 		# These pieces have their directions on the wrong side, so they need flipping
 		reverse = self.direction in [Direction.POS_Y, Direction.NEG_Z, Direction.NEG_X]
