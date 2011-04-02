@@ -324,15 +324,12 @@ class Face:
 			ret.append(sdxf.Line(points=[(x,y+height/2),(x+width,y+height/2)], layer=layer))
 		return ret
 
-	def makeOutline(self, d, place, invert=False):
+	def makeOutline(self, place, invert=False):
 		outline = []
 
-		for layer in d.layers:
-			if layer.name == "TEXT_LAYER":
-				break
-		else:
-			print "new text layer"
-			d.layers.append(sdxf.Layer(name="TEXT_LAYER", color=DXFColours.Blue.value()))
+		pts = self.makeFaceOutline()
+		outline.append(sdxf.LwPolyLine(points=pts))
+
 		def centredText(text,x,y,width,height, reverse=False):
 			itemWidth = (width-((len(text)+1)*spacing))/len(text)
 			ret = []
@@ -341,9 +338,6 @@ class Face:
 			for i in range(len(text)):
 				ret.extend(self.drawNumber(text[i], x+(i*(itemWidth+spacing))+spacing,y+spacing,itemWidth,height-(spacing*2),layer="TEXT_LAYER", reverse = reverse))
 			return ret
-
-		pts = self.makeFaceOutline()
-		outline.append(sdxf.LwPolyLine(points=pts))
 
 		# text spacing is 1/4 for the first item, 2/4 for the centre and 1/4 for the last
 		horizspace = (self.width-2.0)/3 # unit (i.e 1/4) for horizontal spacing. -2 to cope with notches
@@ -377,7 +371,7 @@ class Face:
 			else:
 				item.points = [(place[0]-a+self.width,place[1]-b+self.height) for (a,b) in item.points]
 
-		d.extend(outline)
+		return ([self], outline)
 
 	def makeFaceOutline(self):
 		#self.printFace()
@@ -603,9 +597,21 @@ if __name__ == "__main__":
 
 	plans = sdxf.Drawing()
 	x,y = 0,0
+
+	for layer in plans.layers:
+		if layer.name == "TEXT_LAYER":
+			break
+	else:
+		plans.layers.append(sdxf.Layer(name="TEXT_LAYER", color=DXFColours.Blue.value()))
+
+	facesDone = []
+
 	for face in sorted(faces, key=operator.attrgetter("index")):
 		#print face, face.colour
-		face.makeOutline(plans, (x,y), opts.invert)
+		if face in facesDone:
+			continue
+		(newFaces, outline) = face.makeOutline((x,y), opts.invert)
+		plans.extend(outline)
 		x += opts.cube_side+1
 		if x + opts.cube_side > opts.sheet_size[0]:
 			x = 0
