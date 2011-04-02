@@ -324,11 +324,8 @@ class Face:
 			ret.append(sdxf.Line(points=[(x,y+height/2),(x+width,y+height/2)], layer=layer))
 		return ret
 
-	def makeOutline(self, place, invert=False):
+	def makeNumbers(self, place, reverse):
 		outline = []
-
-		pts = self.makeFaceOutline()
-		outline.append(sdxf.LwPolyLine(points=pts))
 
 		def centredText(text,x,y,width,height, reverse=False):
 			itemWidth = (width-((len(text)+1)*spacing))/len(text)
@@ -348,12 +345,6 @@ class Face:
 
 		print "width",self.width,horizspace,vertspace, spacing
 
-		# These pieces have their directions on the wrong side, so they need flipping
-		reverse = self.direction in [Direction.POS_Y, Direction.NEG_Z, Direction.NEG_X]
-
-		if invert:
-			reverse = not reverse
-
 		outline.extend(centredText("%d"%self.index, 1+horizspace, 1+vertspace, horizspace, vertspace, reverse))
 
 		assert [x for x in self.neighbour if x==None] == [],self.neighbour
@@ -363,6 +354,21 @@ class Face:
 		outline.extend(centredText("%d"%self.neighbour[1].index, 1+horizspace, 1, horizspace, vertspace, reverse))
 		outline.extend(centredText("%d"%self.neighbour[2].index, 1+(horizspace*2), 1+vertspace, horizspace, vertspace, reverse))
 		outline.extend(centredText("%d"%self.neighbour[3].index, 1+horizspace, 1+(vertspace*2), horizspace, vertspace, reverse))
+		return outline
+
+	def makeOutline(self, place, invert=False):
+		outline = []
+		faces = [self]
+
+		# These pieces have their directions on the wrong side, so they need flipping
+		reverse = self.direction in [Direction.POS_Y, Direction.NEG_Z, Direction.NEG_X]
+
+		if invert:
+			reverse = not reverse
+
+		pts = self.makeFaceOutline()
+		outline.append(sdxf.LwPolyLine(points=pts))
+		outline.extend(self.makeNumbers(place, reverse))
 
 		# rotate all the items 180 degrees so they're the right way up in QCad
 		for item in outline:
@@ -371,7 +377,7 @@ class Face:
 			else:
 				item.points = [(place[0]-a+self.width,place[1]-b+self.height) for (a,b) in item.points]
 
-		return ([self], outline)
+		return (faces, outline)
 
 	def makeFaceOutline(self):
 		#self.printFace()
