@@ -411,6 +411,50 @@ class Face:
 
 			outline.extend(thisOutline)
 
+		found = {}
+		for item in outline:
+			if not isinstance(item, sdxf.LwPolyLine):
+				continue
+			sequence = [tuple(sorted((item.points[a],item.points[a+1]))) for a in range(len(item.points)-1)]
+			for pair in sequence:
+				if pair not in found:
+					found[pair] = 1
+				else:
+					found[pair] +=1
+
+		for item in outline:
+			if not isinstance(item, sdxf.LwPolyLine):
+				continue
+			sequence = [(item.points[a],item.points[a+1]) for a in range(len(item.points)-1)]
+			sequence = [pair for pair in sequence if found[tuple(sorted(pair))]==1]
+
+			newpts = [[]]
+			for a in range(len(sequence)-1):
+				if sequence[a][1] == sequence[a+1][0]:
+					newpts[-1].append(sequence[a][0])
+				else:
+					newpts[-1].extend(sequence[a])
+					newpts.append([])
+
+			try:
+				newpts[-1].extend(sequence[-1])
+			except IndexError:
+				print newpts
+				print item.points
+				print sequence
+				raise
+
+			if len(newpts)>1 or newpts[0]!=item.points:
+				for pts in newpts:
+					print "pts",pts
+				print "item.points",item.points
+				print "sequence",sequence
+				#raise Exception
+
+			item.points = newpts[0]
+			for pts in newpts[1:]:
+				outline.append(sdxf.LwPolyLine(points=pts))
+
 		return (neighbourSet.values(), outline)
 
 	def makeFaceOutline(self):
