@@ -358,7 +358,6 @@ class Face:
 
 	def makeOutline(self, place, invert=False):
 		outline = []
-		faces = [self]
 
 		# These pieces have their directions on the wrong side, so they need flipping
 		reverse = self.direction in [Direction.POS_Y, Direction.NEG_Z, Direction.NEG_X]
@@ -366,18 +365,53 @@ class Face:
 		if invert:
 			reverse = not reverse
 
-		pts = self.makeFaceOutline()
-		outline.append(sdxf.LwPolyLine(points=pts))
-		outline.extend(self.makeNumbers(place, reverse))
+		toTest = [place]
+		tested = []
+		neighbourSet = {place:self}
 
-		# rotate all the items 180 degrees so they're the right way up in QCad
-		for item in outline:
-			if reverse: # except the reverse ones, which just want flipping
-				item.points = [(place[0]+a,place[1]-b+self.height) for (a,b) in item.points]
-			else:
-				item.points = [(place[0]-a+self.width,place[1]-b+self.height) for (a,b) in item.points]
+		while len(toTest)>0:
+			point = toTest[0]
+			toTest = toTest[1:]
+			current = neighbourSet[point]
+			(x,y) = point
+			for value in range(len(current.neighbour)):
+				n = current.neighbour[value]
+				if n in tested:
+					continue
+				if n.direction!=current.direction:
+					continue
+				print "neighbour", n
+				
+				if value == 0:
+					newPoint = (x+self.width-1, y)
+				elif value == 1:
+					newPoint = (x, y+self.height-1)
+				elif value == 2:
+					newPoint = (x-self.width+1, y)
+				elif value == 3:
+					newPoint = (x, y-self.height+1)
+				neighbourSet[newPoint] = n
+				toTest.append(newPoint)
+			tested.append(current)
 
-		return (faces, outline)
+		for point in neighbourSet:
+			thisOutline = []
+			(x,y) = point
+			current = neighbourSet[point]
+			pts = current.makeFaceOutline()
+			thisOutline.append(sdxf.LwPolyLine(points=pts))
+			thisOutline.extend(current.makeNumbers(point, reverse))
+
+			# rotate all the items 180 degrees so they're the right way up in QCad
+			for item in thisOutline:
+				if reverse: # except the reverse ones, which just want flipping
+					item.points = [(x+a,y-b+self.height) for (a,b) in item.points]
+				else:
+					item.points = [(x-a+self.width,y-b+self.height) for (a,b) in item.points]
+
+			outline.extend(thisOutline)
+
+		return (neighbourSet.values(), outline)
 
 	def makeFaceOutline(self):
 		#self.printFace()
@@ -617,6 +651,7 @@ if __name__ == "__main__":
 		if face in facesDone:
 			continue
 		(newFaces, outline) = face.makeOutline((x,y), opts.invert)
+		facesDone.extend(newFaces)
 		plans.extend(outline)
 		x += opts.cube_side+1
 		if x + opts.cube_side > opts.sheet_size[0]:
