@@ -445,9 +445,10 @@ class Face:
 			try:
 				newpts[-1].extend(sequence[-1])
 			except IndexError:
-				print newpts
-				print item.points
-				print sequence
+				for pts in newpts:
+					print "pts",pts
+				print "item.points",item.points
+				print "sequence",sequence
 				raise
 
 			if len(newpts)>1 or newpts[0]!=item.points:
