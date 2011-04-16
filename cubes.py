@@ -325,36 +325,38 @@ class Face:
 			ret.append(sdxf.Line(points=[(x,y+height/2),(x+width,y+height/2)], layer=layer))
 		return ret
 
-	def makeNumbers(self, place, reverse):
-		outline = []
-
-		def centredText(text,x,y,width,height, reverse=False):
-			itemWidth = (width-((len(text)+1)*spacing))/len(text)
-			ret = []
-			if not reverse:
-				text = tuple(reversed(text))
-			for i in range(len(text)):
-				ret.extend(self.drawNumber(text[i], x+(i*(itemWidth+spacing))+spacing,y+spacing,itemWidth,height-(spacing*2),layer="TEXT_LAYER", reverse = reverse))
-			return ret
-
-		# text spacing is 1/4 for the first item, 2/4 for the centre and 1/4 for the last
-		horizspace = (self.width-2.0)/3 # unit (i.e 1/4) for horizontal spacing. -2 to cope with notches
-		vertspace = (self.height-2.0)/3
+	def centredText(self, text,x,y,width,height, reverse=False):
 		spacing = (self.width-2.0)/24
 		if spacing < 0.25:
 			spacing = 0.25
 
-		print "width",self.width,horizspace,vertspace, spacing
+		print "spacing", spacing
 
-		outline.extend(centredText("%d"%self.index, 1+horizspace, 1+vertspace, horizspace, vertspace, reverse))
+		itemWidth = (width-((len(text)+1)*spacing))/len(text)
+		ret = []
+		if not reverse:
+			text = tuple(reversed(text))
+		for i in range(len(text)):
+			ret.extend(self.drawNumber(text[i], x+(i*(itemWidth+spacing))+spacing,y+spacing,itemWidth,height-(spacing*2),layer="TEXT_LAYER", reverse = reverse))
+		return ret
+
+	def makeNumbers(self, reverse):
+		outline = []
+
+		# text spacing is 1/4 for the first item, 2/4 for the centre and 1/4 for the last
+		horizspace = (self.width-2.0)/3 # unit (i.e 1/4) for horizontal spacing. -2 to cope with notches
+		vertspace = (self.height-2.0)/3
+		print "width",self.width,horizspace,vertspace
+
+		outline.extend(self.centredText("%d"%self.index, 1+horizspace, 1+vertspace, horizspace, vertspace, reverse))
 
 		assert [x for x in self.neighbour if x==None] == [],self.neighbour
 		print self.index,[x.index for x in self.neighbour],self.colour, self.direction, reverse
 
-		outline.extend(centredText("%d"%self.neighbour[0].index, 1, 1+vertspace, horizspace, vertspace, reverse))
-		outline.extend(centredText("%d"%self.neighbour[1].index, 1+horizspace, 1, horizspace, vertspace, reverse))
-		outline.extend(centredText("%d"%self.neighbour[2].index, 1+(horizspace*2), 1+vertspace, horizspace, vertspace, reverse))
-		outline.extend(centredText("%d"%self.neighbour[3].index, 1+horizspace, 1+(vertspace*2), horizspace, vertspace, reverse))
+		outline.extend(self.centredText("%d"%self.neighbour[0].index, 1, 1+vertspace, horizspace, vertspace, reverse))
+		outline.extend(self.centredText("%d"%self.neighbour[1].index, 1+horizspace, 1, horizspace, vertspace, reverse))
+		outline.extend(self.centredText("%d"%self.neighbour[2].index, 1+(horizspace*2), 1+vertspace, horizspace, vertspace, reverse))
+		outline.extend(self.centredText("%d"%self.neighbour[3].index, 1+horizspace, 1+(vertspace*2), horizspace, vertspace, reverse))
 		return outline
 
 	def makeOutline(self, place, invert=False):
