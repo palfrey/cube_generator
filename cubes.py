@@ -461,7 +461,7 @@ class Face:
 			for pts in newpts[1:]:
 				outline.append(sdxf.LwPolyLine(points=pts))
 
-		return (neighbourSet.values(), outline)
+		return {"faces":neighbourSet.values(), "outline":outline}
 
 	def makeFaceOutline(self):
 		#self.printFace()
@@ -700,9 +700,9 @@ if __name__ == "__main__":
 		#print face, face.colour
 		if face in facesDone:
 			continue
-		(newFaces, outline) = face.makeOutline((x,y), opts.invert)
-		facesDone.extend(newFaces)
-		plans.extend(outline)
+		data = face.makeOutline((x,y), opts.invert)
+		facesDone.extend(data["faces"])
+		plans.extend(data["outline"])
 		x += opts.cube_side+1
 		if x + opts.cube_side > opts.sheet_size[0]:
 			x = 0
