@@ -305,6 +305,7 @@ class Face:
 
 	def drawNumber(self, char, x, y, width, height, layer, reverse = False):
 		char = int(char)
+		assert char>=0 and char<=9, char
 		if char == 1:
 			return [sdxf.Line(points=[(x+width/2,y),(x+width/2,y+height)], layer=layer)]
 		ret = []
