@@ -439,6 +439,9 @@ class Face:
 					newpts[-1].extend(sequence[a])
 					newpts.append([])
 
+			if len(newpts[0])==0:
+				continue
+			
 			try:
 				newpts[-1].extend(sequence[-1])
 			except IndexError:
