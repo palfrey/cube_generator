@@ -403,7 +403,7 @@ class Face:
 			current = neighbourSet[point]
 			pts = current.makeFaceOutline()
 			thisOutline.append(sdxf.LwPolyLine(points=pts))
-			thisOutline.extend(current.makeNumbers(point, reverse))
+			thisOutline.extend(current.makeNumbers(reverse))
 
 			# rotate all the items 180 degrees so they're the right way up in QCad
 			for item in thisOutline:
