@@ -3,6 +3,7 @@ from enum import Enum
 import random
 import operator
 from optparse import OptionParser, OptionValueError
+import math
 
 class Direction(Enum):
 	POS_X = 1
@@ -462,7 +463,34 @@ class Face:
 			for pts in newpts[1:]:
 				outline.append(sdxf.LwPolyLine(points=pts))
 
-		return {"faces":neighbourSet.values(), "outline":outline}
+		smallest = list(place)
+		for item in outline:
+			for (x,y) in item.points:
+				if x<smallest[0]:
+					smallest[0] = x
+				if y<smallest[1]:
+					smallest[1] = y
+
+		
+		if smallest[0]<place[0] or smallest[1]<place[1]:
+			offset = [place[a]-smallest[a] for a in range(2)]
+		else:
+			offset = [0,0]
+
+		size = [0,0]
+		for item in outline:
+			newpts = [list(p) for p in item.points]
+			for p in newpts:
+				
+				p[0] += offset[0]
+				p[1] += offset[1]
+				
+				for a in range(2):
+					size[a] = max(size[a], p[a]-place[a])
+			item.points = newpts
+
+		print "size", size
+		return {"faces":neighbourSet.values(), "outline":outline, "size": size}
 
 	def makeFaceOutline(self):
 		#self.printFace()
@@ -697,6 +725,8 @@ if __name__ == "__main__":
 
 	facesDone = []
 
+	lines = {}
+
 	for face in sorted(faces, key=operator.attrgetter("index")):
 		#print face, face.colour
 		if face in facesDone:
@@ -704,9 +734,20 @@ if __name__ == "__main__":
 		data = face.makeOutline((x,y), opts.invert)
 		facesDone.extend(data["faces"])
 		plans.extend(data["outline"])
-		x += opts.cube_side+1
+		size = data["size"]
+		for a in range(2):
+			size[a] = int(math.ceil(size[a]/(1.0*opts.cube_side)))*opts.cube_side
+		for a in range(y, y+size[1]+1):
+			lines[a] = x+size[0]+1
+		x += size[0]+1
 		if x + opts.cube_side > opts.sheet_size[0]:
-			x = 0
-			y += opts.cube_side +1
-			assert y + opts.cube_side < opts.sheet_size[1], "Design can't fit on one sheet"
+			while True:
+				y+=1
+				if y not in lines:
+					x = 0
+					break
+				elif lines[y]+opts.cube_side < opts.sheet_size[0]:
+					x = lines[y]
+					break
+				assert y + opts.cube_side < opts.sheet_size[1], "Design can't fit on one sheet"
 	plans.saveas(args[0]+'-plans.dxf')
