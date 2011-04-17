@@ -360,7 +360,8 @@ class Face:
 		outline.extend(self.centredText("%d"%self.neighbour[3].index, 1+horizspace, 1+(vertspace*2), horizspace, vertspace, reverse))
 		return outline
 
-	def makeOutline(self, place, invert=False):
+	def makeOutline(self, invert=False):
+		place = (0,0)
 		outline = []
 
 		# These pieces have their directions on the wrong side, so they need flipping
@@ -463,19 +464,15 @@ class Face:
 			for pts in newpts[1:]:
 				outline.append(sdxf.LwPolyLine(points=pts))
 
-		smallest = list(place)
+		smallest = [0,0]
 		for item in outline:
 			for (x,y) in item.points:
 				if x<smallest[0]:
 					smallest[0] = x
 				if y<smallest[1]:
 					smallest[1] = y
-
 		
-		if smallest[0]<place[0] or smallest[1]<place[1]:
-			offset = [place[a]-smallest[a] for a in range(2)]
-		else:
-			offset = [0,0]
+		offset = [-smallest[a] for a in range(2)]
 
 		size = [0,0]
 		for item in outline:
@@ -486,7 +483,7 @@ class Face:
 				p[1] += offset[1]
 				
 				for a in range(2):
-					size[a] = max(size[a], p[a]-place[a])
+					size[a] = max(size[a], p[a])
 			item.points = newpts
 
 		print "size", size
@@ -607,6 +604,42 @@ def find_empty_cubes(cube_grid):
 
 	return ret
 
+class Plans(sdxf.Drawing):
+	def __init__(self, sheet_size):
+		sdxf.Drawing.__init__(self)
+		self.sheet_size = sheet_size
+		self.used = [[False for y in range(sheet_size[1])] for x in range(sheet_size[0])]
+
+	def place(self, items, size):
+		x,y = 0,0
+		while True:
+			assert y + size[1] < self.sheet_size[1], "Design can't fit on one sheet"
+			for x2 in range(x, x+size[0]):
+				for y2 in range(y, y+size[1]):
+					if self.used[x2][y2]:
+						x = x2+1
+						if self.sheet_size[0] < x+size[0]:
+							x = 0
+							y +=1
+						break
+				else:
+					continue # if no break in inner loop, can continue
+				break
+			else:
+				print "occupied", x,y, size
+				# found a space
+				for x2 in range(x, x+size[0]+1):
+					for y2 in range(y, y+size[1]+1):
+						self.used[x2][y2] = True
+				for item in items:
+					newpts = [list(p) for p in item.points]
+					for p in newpts:
+						p[0] += x
+						p[1] += y
+					item.points = newpts
+				self.extend(items)
+				break
+
 if __name__ == "__main__":
 
 	parser = OptionParser()
@@ -714,8 +747,7 @@ if __name__ == "__main__":
 	for newindex,face in enumerate(sorted(faces, key=operator.attrgetter("index"))):
 		face.index = newindex
 
-	plans = sdxf.Drawing()
-	x,y = 0,0
+	plans = Plans(opts.sheet_size)
 
 	for layer in plans.layers:
 		if layer.name == "TEXT_LAYER":
@@ -725,29 +757,12 @@ if __name__ == "__main__":
 
 	facesDone = []
 
-	lines = {}
-
 	for face in sorted(faces, key=operator.attrgetter("index")):
 		#print face, face.colour
 		if face in facesDone:
 			continue
-		data = face.makeOutline((x,y), opts.invert)
+		data = face.makeOutline(opts.invert)
+		plans.place(data["outline"], data["size"])
+
 		facesDone.extend(data["faces"])
-		plans.extend(data["outline"])
-		size = data["size"]
-		for a in range(2):
-			size[a] = int(math.ceil(size[a]/(1.0*opts.cube_side)))*opts.cube_side
-		for a in range(y, y+size[1]+1):
-			lines[a] = x+size[0]+1
-		x += size[0]+1
-		if x + opts.cube_side > opts.sheet_size[0]:
-			while True:
-				y+=1
-				if y not in lines:
-					x = 0
-					break
-				elif lines[y]+opts.cube_side < opts.sheet_size[0]:
-					x = lines[y]
-					break
-				assert y + opts.cube_side < opts.sheet_size[1], "Design can't fit on one sheet"
 	plans.saveas(args[0]+'-plans.dxf')
