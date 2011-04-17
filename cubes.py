@@ -388,11 +388,17 @@ class Face:
 				print "neighbour", n
 				
 				if value == 0:
-					newPoint = (x+self.width-1, y)
+					if reverse:
+						newPoint = (x-self.width+1, y)
+					else:
+						newPoint = (x+self.width-1, y)
 				elif value == 1:
 					newPoint = (x, y+self.height-1)
 				elif value == 2:
-					newPoint = (x-self.width+1, y)
+					if reverse:
+						newPoint = (x+self.width-1, y)
+					else:
+						newPoint = (x-self.width+1, y)
 				elif value == 3:
 					newPoint = (x, y-self.height+1)
 				neighbourSet[newPoint] = n
