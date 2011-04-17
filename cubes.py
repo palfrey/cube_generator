@@ -624,7 +624,7 @@ class Plans(sdxf.Drawing):
 				for y2 in range(y, y+size[1]+1):
 					if self.used[x2][y2]:
 						x = x2+1
-						if self.sheet_size[0] < x+size[0]:
+						if self.sheet_size[0] < x+size[0]+1:
 							x = 0
 							y +=1
 						break
