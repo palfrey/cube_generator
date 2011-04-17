@@ -620,8 +620,8 @@ class Plans(sdxf.Drawing):
 		x,y = 0,0
 		while True:
 			assert y + size[1] < self.sheet_size[1], "Design can't fit on one sheet"
-			for x2 in range(x, x+size[0]):
-				for y2 in range(y, y+size[1]):
+			for x2 in range(x, x+size[0]+1):
+				for y2 in range(y, y+size[1]+1):
 					if self.used[x2][y2]:
 						x = x2+1
 						if self.sheet_size[0] < x+size[0]:
