@@ -494,6 +494,45 @@ class Face:
 
 		print "size", size
 		return {"faces":neighbourSet.values(), "outline":outline, "size": size}
+	
+	def _expand3d(self,d,pts,translate,faceExpand):
+		d.append(sdxf.LwPolyLine(points=[translate(a,b) for (a,b) in pts]))
+		pairs = [(pts[a],pts[a+1]) for a in range(len(pts)-1)]
+		expanded = [faceExpand(a) for a in pts]
+		d.append(sdxf.LwPolyLine(points=[translate(a,b) for (a,b) in expanded]))
+		expandpairs = [(expanded[a],expanded[a+1]) for a in range(len(pts)-1)]
+		
+	def make3d(self, d):
+		pts = self.makeFaceOutline()
+
+		layer = [l for l in d.layers if l.color == self.colour.value()]
+		assert len(layer)<2, layer
+		if len(layer) == 0:
+			layer = sdxf.Layer(name=("layer-%d"%self.colour.value()).upper(), color=self.colour.value())
+			d.layers.append(layer)
+		else:
+			layer = layer[0]
+
+		def doSide(points):
+			#flag = sdxf.CLOSED | sdxf.CLOSED_N | sdxf.POLYLINE_3D
+			flag = 0
+			d.append(sdxf.PolyLine(flag=flag,points=points,layer=layer.name))
+
+		print self.direction
+		if self.direction == Direction.POS_X:
+			doSide([(self.origin[0], self.origin[1]+a, self.origin[2]+b) for (a,b) in pts])
+		elif self.direction == Direction.POS_Y:
+			doSide([(self.origin[0]+a, self.origin[1], self.origin[2]+b) for (a,b) in pts])
+		elif self.direction == Direction.POS_Z:
+			doSide([(self.origin[0]+a, self.origin[1]+b, self.origin[2]) for (a,b) in pts])
+		elif self.direction == Direction.NEG_X:
+			doSide([(self.origin[0]-1, self.origin[1]-a-1, self.origin[2]-b-1) for (a,b) in pts])
+		elif self.direction == Direction.NEG_Y:
+			doSide([(self.origin[0]-a-1, self.origin[1]-1, self.origin[2]-b-1) for (a,b) in pts])
+		elif self.direction == Direction.NEG_Z:
+			doSide([(self.origin[0]-a-1, self.origin[1]-b-1, self.origin[2]-1) for (a,b) in pts])
+		else:
+			raise Exception, self.direction
 
 	def makeFaceOutline(self):
 		#self.printFace()
@@ -744,11 +783,6 @@ if __name__ == "__main__":
 							print "skipping", face, face.direction
 							face.removeCubes()
 
-	blender = sdxf.Drawing()
-	space.fixCubes()
-	space.generateCubes(blender)
-	blender.saveas(args[0]+'-3d.dxf')
-
 	# reindex all of the faces as there's a few missing after the hidden-face removal
 	for newindex,face in enumerate(sorted(faces, key=operator.attrgetter("index"))):
 		face.index = newindex
@@ -763,6 +797,8 @@ if __name__ == "__main__":
 
 	facesDone = []
 
+	space.fixCubes()
+
 	for face in sorted(faces, key=operator.attrgetter("index")):
 		#print face, face.colour
 		if face in facesDone:
@@ -772,3 +808,9 @@ if __name__ == "__main__":
 
 		facesDone.extend(data["faces"])
 	plans.saveas(args[0]+'-plans.dxf')
+	
+	blender = sdxf.Drawing()
+
+	for face in faces[:1]:
+		face.make3d(blender)
+	blender.saveas(args[0]+'-3d.dxf')
