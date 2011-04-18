@@ -327,6 +327,7 @@ class Face:
 		return ret
 
 	def centredText(self, text,x,y,width,height, reverse=False):
+		spacing = 0.05
 		spacing = (self.width-2.0)/24
 		if spacing < 0.25:
 			spacing = 0.25
@@ -360,7 +361,7 @@ class Face:
 		outline.extend(self.centredText("%d"%self.neighbour[3].index, 1+horizspace, 1+(vertspace*2), horizspace, vertspace, reverse))
 		return outline
 
-	def makeOutline(self, invert=False):
+	def makeOutline(self, invert=False, spacing = 0):
 		place = (0,0)
 		outline = []
 
@@ -389,18 +390,18 @@ class Face:
 				
 				if value == 0:
 					if reverse:
-						newPoint = (x-self.width+1, y)
+						newPoint = (x-self.width+1-spacing, y)
 					else:
-						newPoint = (x+self.width-1, y)
+						newPoint = (x+self.width-1+spacing, y)
 				elif value == 1:
-					newPoint = (x, y+self.height-1)
+					newPoint = (x, y+self.height-1+spacing)
 				elif value == 2:
 					if reverse:
-						newPoint = (x+self.width-1, y)
+						newPoint = (x+self.width-1+spacing, y)
 					else:
-						newPoint = (x-self.width+1, y)
+						newPoint = (x-self.width+1-spacing, y)
 				elif value == 3:
-					newPoint = (x, y-self.height+1)
+					newPoint = (x, y-self.height+1-spacing)
 				neighbourSet[newPoint] = n
 				toTest.append(newPoint)
 			tested.append(current)
@@ -412,6 +413,7 @@ class Face:
 			pts = current.makeFaceOutline()
 			thisOutline.append(sdxf.LwPolyLine(points=pts))
 			thisOutline.extend(current.makeNumbers(reverse))
+			thisOutline.extend(current.markUnused(reverse))
 
 			# rotate all the items 180 degrees so they're the right way up in QCad
 			for item in thisOutline:
@@ -494,6 +496,17 @@ class Face:
 
 		print "size", size
 		return {"faces":neighbourSet.values(), "outline":outline, "size": size}
+	
+	def markUnused(self, reverse):
+		outline = []
+		number = "%d"%self.index
+		assert len(number)>0
+		for x in range(self.width):
+			for y in range(self.height):
+				if not self.grid[x][y]:
+					outline.extend(self.centredText(number,x+0.25,y+0.25,.5,.5,reverse=reverse))
+		print self.index, "unused outline",[x.points for x in outline]
+		return outline
 
 	def makeFaceOutline(self):
 		#self.printFace()
@@ -666,6 +679,7 @@ if __name__ == "__main__":
 	parser.add_option("-s","--sheet-size", default=(100,200),action="callback", callback=size_callback, nargs=1, dest="sheet_size",type="string")
 	parser.add_option("-r","--random-seed",default=None, dest="seed")
 	parser.add_option("-i","--invert-pieces",action="store_true",default=False,dest="invert",help="Generate pieces with instructions on the outside")
+	parser.add_option("--spacing",default=0,type="int", dest="spacing")
 
 	(opts,args) = parser.parse_args()
 
@@ -767,8 +781,7 @@ if __name__ == "__main__":
 		#print face, face.colour
 		if face in facesDone:
 			continue
-		data = face.makeOutline(opts.invert)
+		data = face.makeOutline(opts.invert, opts.spacing)
 		plans.place(data["outline"], data["size"])
-
 		facesDone.extend(data["faces"])
 	plans.saveas(args[0]+'-plans.dxf')
