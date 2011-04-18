@@ -249,20 +249,70 @@ class LwPolyLine(_Entity):
 
 
 class PolyLine(_Entity):
-    # TODO: Finish polyline (now implemented as a series of lines)
-    def __init__(self,points,flag=0,width=None,**common):
-        _Entity.__init__(self,**common)
-        self.points=points
-        self.flag=flag
-        self.width=width
-    def __str__(self):
-        result= '0' + newline + 'POLYLINE' + newline + '%s' + newline + '70' + newline + '%s'%\
-            (self._common(),self.flag)
-        for point in self.points:
-            result+= newline + '0' + newline + 'VERTEX' + newline + '%s'%_point(point)
-            if self.width:result+= newline + '40' + newline + '%s' + newline + '41' + newline + '%s'%(self.width,self.width)
-        result+= newline + '0' + newline + 'SEQEND'
-        return result
+	def __init__(self,points,org_point=[0,0,0],flag=0,width=None,**common):
+		#width = number, or width = list [width_start=None, width_end=None]
+		#for 2d-polyline: points = [ [x, y, z, width_start=None, width_end=None, bulge=0 or None], ...]
+		#for 3d-polyline: points = [ [x, y, z], ...]
+		#for polyface: points = [points_list, faces_list]
+		_Entity.__init__(self,**common)
+		self.points=points
+		self.org_point=org_point
+		self.flag=flag
+		self.polyface = False
+		self.polyline2d = False
+		self.faces = [] # dummy value
+		self.width= None # dummy value
+		if self.flag & POLYFACE_MESH:
+			self.polyface=True
+			self.points=points[0]
+			self.faces=points[1]
+			self.p_count=len(self.points)
+			self.f_count=len(self.faces)
+		elif not self.flag & POLYLINE_3D:
+			self.polyline2d = True
+			if width:
+				if type(width)!='list':
+					width=[width,width]
+				self.width=width
+
+	def __str__(self):
+		result= ('0' + newline + 'POLYLINE' + newline + '%s'+newline+'70' + newline + '%s' + newline)%(self._common(),self.flag)
+		result+='66' + newline + '1' + newline
+		result+=('%s' + newline)%_point(self.org_point)
+		if self.polyface:
+			result+=('71' + newline + '%s' + newline)%self.p_count
+			result+=('72' + newline + '%s' + newline)%self.f_count
+		elif self.polyline2d:
+			if self.width!=None: result+=('40' + newline + '%s' + newline + '41' + newline + '%s' + newline)%(self.width[0],self.width[1])
+		for point in self.points:
+			result+='0' + newline + 'VERTEX' + newline
+			result+=('8' + newline + '%s' + newline)%self.layer
+			if self.polyface:
+				result+=('%s' + newline)%_point(point[0:3])
+				result+='70' + newline + '192' + newline
+			elif self.polyline2d:
+				result+=('%s' + newline)%_point(point[0:2])
+				if len(point)>4:
+					width1, width2 = point[3], point[4]
+					if width1!=None: result+=('40' + newline + '%s' + newline)%width1
+					if width2!=None: result+=('41' + newline + '%s' + newline) %width2
+				if len(point)==6:
+					bulge = point[5]
+					if bulge: result+=('42' + newline + '%s' + newline)%bulge
+			else:
+				result+=('%s' + newline)%_point(point[0:3])
+		for face in self.faces:
+			result+='0' + newline + 'VERTEX' + newline
+			result+=('8' + newline + '%s' + newline)%self.layer
+			result+=('%s' + newline)%_point(self.org_point)
+			result+='70' + newline + '128' + newline
+			result+=('71' + newline + '%s' + newline)%face[0]
+			result+=('72' + newline + '%s' + newline)%face[1]
+			result+=('73' + newline + '%s' + newline)%face[2]
+			if len(face)==4: result+=('74' + newline + '%s' + newline)%face[3]
+		result+='0' + newline + 'SEQEND' + newline
+		result+=('8' + newline + '%s')%self.layer
+		return result
 
 class Point(_Entity):
     """Colored solid fill."""
@@ -572,7 +622,7 @@ class LineList(_Entity):
             Line(points=[points[i],points[i+1]],parent=self)
         return result[1:]
 
-PolyLine=LineList
+#PolyLine=LineList
 #---test
 def main():
     #Blocks
