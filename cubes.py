@@ -611,25 +611,35 @@ def find_empty_cubes(cube_grid):
 	return ret
 
 class Plans(sdxf.Drawing):
-	def __init__(self, sheet_size):
+	def setup(self):
 		sdxf.Drawing.__init__(self)
-		self.sheet_size = sheet_size
-		self.used = [[False for y in range(sheet_size[1])] for x in range(sheet_size[0])]
+		self.used = [[False for y in range(self.sheet_size[1])] for x in range(self.sheet_size[0])]
 		for layer in self.layers:
 			if layer.name == "TEXT_LAYER":
 				break
 		else:
 			self.layers.append(sdxf.Layer(name="TEXT_LAYER", color=DXFColours.Blue.value()))
 
+	def __init__(self, sheet_size, file_pattern):
+		self.sheet_size = sheet_size
+		self.file_pattern = file_pattern
+		self.sheet_index = 0
+		self.setup()
+
 	def place(self, items, size):
 		x,y = 0,0
 		while True:
-			assert y + size[1] < self.sheet_size[1], "Design can't fit on one sheet"
-			for x2 in range(x, x+size[0]+1):
-				for y2 in range(y, y+size[1]+1):
+			if y + size[1] > self.sheet_size[1]: # Design can't fit on one sheet
+				self.saveas(self.file_pattern%self.sheet_index)
+				self.sheet_index +=1
+				self.setup()
+				x,y = 0,0
+
+			for x2 in range(x, min(self.sheet_size[0],x+size[0]+1)):
+				for y2 in range(y, min(self.sheet_size[1],y+size[1]+1)):
 					if self.used[x2][y2]:
 						x = x2+1
-						if self.sheet_size[0] < x+size[0]+1:
+						if self.sheet_size[0] < x+size[0]:
 							x = 0
 							y +=1
 						break
@@ -639,8 +649,8 @@ class Plans(sdxf.Drawing):
 			else:
 				print "occupied", x,y, size
 				# found a space
-				for x2 in range(x, x+size[0]+1):
-					for y2 in range(y, y+size[1]+1):
+				for x2 in range(x, min(self.sheet_size[0],x+size[0]+1)):
+					for y2 in range(y, min(self.sheet_size[1],y+size[1]+1)):
 						self.used[x2][y2] = True
 				for item in items:
 					newpts = [list(p) for p in item.points]
@@ -650,6 +660,9 @@ class Plans(sdxf.Drawing):
 					item.points = newpts
 				self.extend(items)
 				break
+
+	def finished(self):
+		self.saveas(self.file_pattern%self.sheet_index)
 
 if __name__ == "__main__":
 
@@ -758,7 +771,7 @@ if __name__ == "__main__":
 	for newindex,face in enumerate(sorted(faces, key=operator.attrgetter("index"))):
 		face.index = newindex
 
-	plans = Plans(opts.sheet_size)
+	plans = Plans(opts.sheet_size, args[0]+'-plans-%d.dxf')
 
 	facesDone = []
 
@@ -770,4 +783,4 @@ if __name__ == "__main__":
 		plans.place(data["outline"], data["size"])
 
 		facesDone.extend(data["faces"])
-	plans.saveas(args[0]+'-plans.dxf')
+	plans.finished()
