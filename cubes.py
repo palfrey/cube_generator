@@ -615,6 +615,11 @@ class Plans(sdxf.Drawing):
 		sdxf.Drawing.__init__(self)
 		self.sheet_size = sheet_size
 		self.used = [[False for y in range(sheet_size[1])] for x in range(sheet_size[0])]
+		for layer in self.layers:
+			if layer.name == "TEXT_LAYER":
+				break
+		else:
+			self.layers.append(sdxf.Layer(name="TEXT_LAYER", color=DXFColours.Blue.value()))
 
 	def place(self, items, size):
 		x,y = 0,0
@@ -754,12 +759,6 @@ if __name__ == "__main__":
 		face.index = newindex
 
 	plans = Plans(opts.sheet_size)
-
-	for layer in plans.layers:
-		if layer.name == "TEXT_LAYER":
-			break
-	else:
-		plans.layers.append(sdxf.Layer(name="TEXT_LAYER", color=DXFColours.Blue.value()))
 
 	facesDone = []
 
