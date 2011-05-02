@@ -36,34 +36,36 @@ class Space:
 			raise
 
 	def fixCubes(self):
+		sets = {}
 
-		pairs = {}
-
-		# pairs first
+		# sequences with the same multiple owners first
 		for x in range(len(self.grid)):
 			for y in range(len(self.grid[x])):
 				for z in range(len(self.grid[x][y])):
-					if len(self.grid[x][y][z]) == 2:
+					if len(self.grid[x][y][z])>1:
 						key = tuple(sorted(self.grid[x][y][z]))
-						if key not in pairs:
-							pairs[key] = []
-						pairs[key].append((x,y,z))
+						if key not in sets:
+							sets[key] = []
+						sets[key].append((x,y,z))
 
-		for key in sorted(pairs):
-			(first, second) = key
-			current = random.choice(key) # pick random starting piece
+		for key in sorted(sets.keys()):
+			if len(sets[key]) == 1:
+				continue
+			
+			print "fixing", key, sorted(sets[key])
 
-			#print "fixing", first, second, sorted(pairs[key])
+			idx = random.randrange(len(key))
 
-			for (x,y,z) in sorted(pairs[key]):
+			for (x,y,z) in sorted(sets[key]):
+				current = key[idx]
 				self.grid[x][y][z] = [current]
-				if current == first:
-					current.markNeighbour(second,x,y,z)
-					current = second
-				else:
-					current.markNeighbour(first,x,y,z)
-					current = first
-				current.deleteCube(x,y,z) # this should be the "other" face
+				
+				for a in range(len(key)):
+					if a != idx:
+						current.markNeighbour(key[a],x,y,z)
+						key[a].deleteCube(x,y,z)
+				
+				idx = (idx +1) % len(key)
 
 		for x in range(len(self.grid)):
 			x2 = x+1
