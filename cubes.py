@@ -180,7 +180,7 @@ class Face:
 		self.origin = list(origin)
 		self.grid = [[True for y in range(height)] for x in range(width)]
 		self.direction = direction
-		self.neighbour = [None for x in range(4)]
+		self.neighbour = [set() for x in range(4)]
 
 		#print "face", origin, width, height, self.colour
 
@@ -256,20 +256,16 @@ class Face:
 
 		if x2 == 0:
 			assert y2>0 and y2<self.height-1, (x2,y2)
-			assert self.neighbour[0] in (None, other)
-			self.neighbour[0] = other
+			self.neighbour[0].add(other)
 		elif y2 == 0:
 			assert x2>0 and x2<self.width-1, (x2,y2)
-			assert self.neighbour[1] in (None, other)
-			self.neighbour[1] = other
+			self.neighbour[1].add(other)
 		elif x2 == self.width-1:
 			assert y2>0 and y2<self.height-1, (x2,y2)
-			assert self.neighbour[2] in (None, other)
-			self.neighbour[2] = other
+			self.neighbour[2].add(other)
 		elif y2 == self.height-1:
 			assert x2>0 and x2<self.width-1, (x2,y2)
-			assert self.neighbour[3] in (None, other)
-			self.neighbour[3] = other
+			self.neighbour[3].add(other)
 		else:
 			raise Exception, (x2,y2, x,y,z, self.direction)
 
@@ -328,19 +324,29 @@ class Face:
 			ret.append(sdxf.Line(points=[(x,y+height/2),(x+width,y+height/2)], layer=layer))
 		return ret
 
-	def centredText(self, text,x,y,width,height, reverse=False):
+	def centredText(self, text,x,y,width,height, reverse=False, topspacing=None, bottomspacing = None):
 		spacing = (self.width-2.0)/24
 		if spacing < 0.25:
 			spacing = 0.25
 
-		print "spacing", spacing
+		if topspacing == None:
+			topspacing = spacing
+		else:
+			topspacing = spacing/topspacing
+
+		if bottomspacing == None:
+			bottomspacing = spacing
+		else:
+			bottomspacing = spacing/bottomspacing
+
+		#print "spacing", spacing
 
 		itemWidth = (width-((len(text)+1)*spacing))/len(text)
 		ret = []
 		if not reverse:
 			text = tuple(reversed(text))
 		for i in range(len(text)):
-			ret.extend(self.drawNumber(text[i], x+(i*(itemWidth+spacing))+spacing,y+spacing,itemWidth,height-(spacing*2),layer="TEXT_LAYER", reverse = reverse))
+			ret.extend(self.drawNumber(text[i], x+(i*(itemWidth+spacing))+spacing,y+topspacing,itemWidth,height-(topspacing+bottomspacing),layer="TEXT_LAYER", reverse = reverse))
 		return ret
 
 	def makeNumbers(self, reverse):
@@ -353,13 +359,29 @@ class Face:
 
 		outline.extend(self.centredText("%d"%self.index, 1+horizspace, 1+vertspace, horizspace, vertspace, reverse))
 
-		assert [x for x in self.neighbour if x==None] == [],self.neighbour
-		print self.index,[x.index for x in self.neighbour],self.colour, self.direction, reverse
+		#assert [x for x in self.neighbour if x==None] == [],self.neighbour
+		#print self.index,[x.index for x in self.neighbour],self.colour, self.direction, reverse
 
-		outline.extend(self.centredText("%d"%self.neighbour[0].index, 1, 1+vertspace, horizspace, vertspace, reverse))
-		outline.extend(self.centredText("%d"%self.neighbour[1].index, 1+horizspace, 1, horizspace, vertspace, reverse))
-		outline.extend(self.centredText("%d"%self.neighbour[2].index, 1+(horizspace*2), 1+vertspace, horizspace, vertspace, reverse))
-		outline.extend(self.centredText("%d"%self.neighbour[3].index, 1+horizspace, 1+(vertspace*2), horizspace, vertspace, reverse))
+		def drawNeighbours(neighs, x,y):
+			space = vertspace/(1.0*len(neighs))
+
+			for (i,n) in enumerate(neighs):
+				if len(neighs)>1:
+					print "number", n.index, i, x,y+(i*space), space
+				if i != 0:
+					topspacing = len(neighs)
+				else:
+					topspacing = None
+				if i!=len(neighs)-1:
+					bottomspacing = len(neighs)
+				else:
+					bottomspacing = None
+				outline.extend(self.centredText("%d"%n.index, x, y+(i*space), horizspace, space, reverse, bottomspacing=bottomspacing, topspacing =topspacing))
+
+		drawNeighbours(self.neighbour[0], 1, 1+vertspace)
+		drawNeighbours(self.neighbour[1], 1+horizspace, 1)
+		drawNeighbours(self.neighbour[2], 1+(horizspace*2), 1+vertspace)
+		drawNeighbours(self.neighbour[3], 1+horizspace, 1+(vertspace*2))
 		return outline
 
 	def makeOutline(self, invert=False):
@@ -383,9 +405,16 @@ class Face:
 			(x,y) = point
 			for value in range(len(current.neighbour)):
 				n = current.neighbour[value]
-				if n in tested:
+				if len(n) == 0:
 					continue
-				if n.direction!=current.direction:
+				for poss in n:
+					if poss in tested:
+						continue
+					if poss.direction!=current.direction:
+						continue
+					n = poss
+					break
+				else:
 					continue
 				print "neighbour", n
 				
