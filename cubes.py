@@ -117,6 +117,9 @@ class Space:
 									break
 							else:
 								raise Exception, axe # shouldn't happen
+						if poss == None:
+							poss = self.grid[x][y][z][1]
+							#return
 						assert poss != None
 						for owner in self.grid[x][y][z]:
 							if owner == poss:
@@ -249,26 +252,33 @@ class Face:
 			raise Exception, self.direction
 
 	def deleteCube(self, x, y, z):
-		(x2,y2) = self._translateLocation(x,y,z)
-		self.grid[x2][y2] = False
+		try:
+			(x2,y2) = self._translateLocation(x,y,z)
+			self.grid[x2][y2] = False
+		except:
+			pass
 
 	def markNeighbour(self, other, x, y, z):
-		(x2,y2) = self._translateLocation(x,y,z)
+		try:
+			(x2,y2) = self._translateLocation(x,y,z)
+		except:
+			return
 
 		if x2 == 0:
-			assert y2>0 and y2<self.height-1, (x2,y2)
-			self.neighbour[0].add(other)
+			if (y2>0 and y2<self.height-1):
+				self.neighbour[0].add(other)
 		elif y2 == 0:
-			assert x2>0 and x2<self.width-1, (x2,y2)
-			self.neighbour[1].add(other)
+			if (x2>0 and x2<self.width-1):
+				self.neighbour[1].add(other)
 		elif x2 == self.width-1:
-			assert y2>0 and y2<self.height-1, (x2,y2)
-			self.neighbour[2].add(other)
+			if (y2>0 and y2<self.height-1):
+				self.neighbour[2].add(other)
 		elif y2 == self.height-1:
-			assert x2>0 and x2<self.width-1, (x2,y2)
-			self.neighbour[3].add(other)
+			if (x2>0 and x2<self.width-1):
+				self.neighbour[3].add(other)
 		else:
-			raise Exception, (x2,y2, x,y,z, self.direction)
+			pass
+			#raise Exception, (x2,y2, x,y,z, self.direction)
 
 	def _setChar(self, out, x,y, char):
 		out[y] = out[y][:x] + char + out[y][x+1:]
@@ -364,6 +374,8 @@ class Face:
 		#print self.index,[x.index for x in self.neighbour],self.colour, self.direction, reverse
 
 		def drawNeighbours(neighs, x,y):
+			if len(neighs) == 0:
+				return
 			space = vertspace/(1.0*len(neighs))
 
 			for (i,n) in enumerate(neighs):
@@ -543,7 +555,7 @@ class Face:
 				pts.append((x,y))
 				#print pts
 				#self.printFace(pts)
-				assert pts[0] == (x,y)
+				assert pts[0] == (x,y), (pts[0],x,y)
 				return pts
 			pts.append((x,y))
 			try:
