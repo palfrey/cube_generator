@@ -14,9 +14,10 @@ class Direction(Enum):
 	NEG_Z = 6
 
 class Space:
-	def __init__(self, size):
+	def __init__(self, size, dimensions):
 		assert len(size) == 3, size
 		self.grid = [[[[] for z in range(size[2])] for y in range(size[1])] for x in range(size[0])]
+		self.dimensions = dimensions
 
 	def addBox(self, coords, owner):
 		assert [a for a in coords if a<0] == [], coords
@@ -35,7 +36,7 @@ class Space:
 			print coords
 			raise
 
-	def fixCubes(self):
+	def fixCubes(self, cube_side):
 		sets = {}
 
 		# sequences with the same multiple owners first
@@ -75,7 +76,7 @@ class Space:
 					z2 = z+1
 
 					def pickOwner(x2,y2,z2):
-						if x2 <0 or y2<0 or z2<0 or x2>=dimensions[0]*opts.cube_side or y2>=dimensions[1]*opts.cube_side or z2>=dimensions[2]*opts.cube_side:
+						if x2 <0 or y2<0 or z2<0 or x2>=self.dimensions[0]*cube_side or y2>=self.dimensions[1]*cube_side or z2>=self.dimensions[2]*cube_side:
 							return None
 						possibleOwner = self.grid[x2][y2][z2]
 						if len(possibleOwner) == 0: # nothing there
@@ -763,7 +764,7 @@ if __name__ == "__main__":
 			else:
 				assert dimensions[0] == len(row)
 
-	space = Space([a*opts.cube_side for a in dimensions])
+	space = Space([a*opts.cube_side for a in dimensions], dimensions)
 	faces = []
 
 	grid = find_empty_cubes(cube_grid)
@@ -794,7 +795,7 @@ if __name__ == "__main__":
 							face.removeCubes()
 
 	blender = sdxf.Drawing()
-	space.fixCubes()
+	space.fixCubes(opts.cube_side)
 	space.generateCubes(blender)
 	blender.saveas(args[0]+'-3d.dxf')
 
